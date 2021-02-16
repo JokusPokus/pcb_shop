@@ -1,2 +1,2 @@
-# pcb_backend
-Backend API for PCB Online Store
+# pcb_shop
+PCB Online Store project.
