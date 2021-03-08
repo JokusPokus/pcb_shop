@@ -1,76 +1,123 @@
 from django.db import models
 
 
-# Constraints on the acceptable board dimensions.
+# Constraints on the acceptable option values (as discussed on the Miro Board).
 # These might need to be updated according to JLCPCB's requirements.
-MIN_DIM_X = 6
-MAX_DIM_X = 400
 
-MIN_DIM_Y = 6
-MAX_DIM_Y = 500
+OPTIONS = {
+    # Numeric constraints
 
-# Maximum number of different designs
-MAX_NUM_DESIGNS = 50
+    "dim_x": {
+        "min": 6,
+        "max": 400,
+        "default": 100
+    },
 
+    "dim_y": {
+        "min": 6,
+        "max": 500,
+        "default": 100
+    },
 
-class Layer(models.model):
-    LAYER_CHOICES = [
-        (1, 1),
-        (2, 2),
-        (4, 4),
-        (6, 6)
-    ]
-    DEFAULT_CHOICE = 2
+    # Categorical constraints
 
-    layerQuantity = models.IntegerField(
-        choices=LAYER_CHOICES,
-        default=DEFAULT_CHOICE
-    )
+    "num_designs": {
+        "choices": [
+            (1, 1)
+        ],
+        "default": 1
+    },
 
+    "layers": {
+        "choices": [
+            (1, 1),
+            (2, 2),
+        ],
+        "default": 2
+    },
 
-class DeliveryFormat(models.model):
-    pass
+    "delivery_format": {
+        "choices": [
+            ("single_pcb", "Single PCB"),
+        ],
+        "default": "single_pcb"
+    },
 
+    "thickness": {
+        "choices": [
+            (0.4, 0.4),
+            (0.6, 0.6),
+            (0.8, 0.8),
+            (1.0, 1.0),
+            (1.2, 1.2),
+            (1.6, 1.6),
+            (2.0, 2.0)
+        ],
+        "default": 1.6
+    },
 
-class Quantity(models.model):
-    pass
+    "color": {
+        "choices": [
+            ("green", "green"),
+            ("red", "red"),
+            ("yellow", "yellow"),
+            ("blue", "blue"),
+            ("white", "white"),
+            ("black", "black"),
+        ],
+        "default": "green"
+    },
 
+    "surface_finish": {
+        "choices": [
+            ("hasl_with_lead", "HASL(with lead)"),
+            ("lead_free_hasl", "LeadFree HASL-RoHS"),
+            ("enig-rohs", "ENIG-RoHS")
+        ],
+        "default": "hasl_with_lead"
+    },
 
-class Thickness(models.model):
-    pass
+    "copper_weight": {
+        "choices": [
+            (1, "1 oz"),
+            (2, "2 oz")
+        ],
+        "default": 1
+    },
 
+    "gold_fingers": {
+        "choices": [
+            ("no", "No"),
+            ("yes", "Yes")
+        ],
+        "default": "no"
+    },
 
-class Color(models.model):
-    pass
+    "castellated_holes": {
+        "choices": [
+            ("no", "No"),
+        ],
+        "default": "no"
+    },
 
+    "remove_order_num": {
+        "choices": [
+            ("no", "No"),
+        ],
+        "default": "no"
+    },
 
-class SurfaceFinish(models.model):
-    pass
+    "confirm_prod_file": {
+        "choices": [
+            ("no", "No"),
+        ],
+        "default": "no"
+    },
 
-
-class CopperWeight(models.model):
-    pass
-
-
-class GoldFingers(models.model):
-    pass
-
-
-class Chamfered45(models.model):
-    pass
-
-
-class ConfirmProdFile(models.model):
-    pass
-
-
-class FlyingProbeTest(models.model):
-    pass
-
-
-class CastellatedHoles(models.model):
-    pass
-
-
-class RemoveOrderNum(models.model):
-    pass
+    "flying_probe_test": {
+        "choices": [
+            ("fully_test", "Fully test")
+        ],
+        "default": "fully_test"
+    },
+}
