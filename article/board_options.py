@@ -1,11 +1,38 @@
+"""Constraints on the acceptable option values.
+These might need to be updated according to the vendors' requirements.
+
+All options are represented as dictionaries and should include either
+NUMERIC or CATEGORICAL constraints on their values. Moreover, each option
+has to define a default value.
+
+NUMERIC constraints define, for example, a min and max value.
+
+E.g.,
+"dim_x": {
+    "min": 6,
+    "max": 400,
+    "default": 100
+}
+
+CATEGORICAL constraints define a list of tuples labelled "choices",
+where each tuple represents one selectable option. The first element
+in each tuple is the actual value to be set on the model, and the second
+element is the human-readable name.
+
+E.g.,
+"copper_weight": {
+    "choices": [
+        (1, "1 oz"),
+        (2, "2 oz")
+    ],
+    "default": 1
+}
+"""
 from django.db import models
 
 
-# Constraints on the acceptable option values (as discussed on the Miro Board).
-# These might need to be updated according to JLCPCB's requirements.
-
 OPTIONS = {
-    # Numeric constraints
+    # NUMERIC constraints
 
     "dim_x": {
         "min": 6,
@@ -19,7 +46,7 @@ OPTIONS = {
         "default": 100
     },
 
-    # Categorical constraints
+    # CATEGORICAL constraints
 
     "num_designs": {
         "choices": [
