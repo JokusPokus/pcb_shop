@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-import article.board_options as board_opt
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 from article.board_options import OPTIONS
 
@@ -8,6 +8,15 @@ from article.board_options import OPTIONS
 # Let's set a default category ("Misc", for example)
 # that products can fall back to in the unlikely event that we delete a category.
 DEFAULT_CATEGORY = 1
+
+
+class ArticleCategory(models.Model):
+    """Model for article categories, such as PCBs."""
+    articleCategoryID = models.PositiveIntegerField(primary_key=True)
+    created = models.DateTimeField(auto_now_add=True)
+
+    name = models.CharField(max_length=30)
+    description = models.TextField(max_length=200)
 
 
 class Article(models.Model):
@@ -25,24 +34,13 @@ class Article(models.Model):
         ordering = ['created']
 
 
-class ArticleCategory(models.Model):
-    """Model for article categories, such as PCBs."""
-    articleCategoryID = models.PositiveIntegerField(primary_key=True)
-    created = models.DateTimeField(auto_now_add=True)
-
-    name = models.CharField(max_length=30)
-    description = models.TextField(max_length=200)
-
-
 class Board(models.Model):
     """Model for PCBs, based on constantly updated
     board option constraints.
     """
-    @staticmethod
     def choice_args(option_name: str, options: dict = OPTIONS) -> dict:
         """Helper function to define model field parameters
         for categorical board options in a DRY way."""
-
         return {
             "choices": options[option_name]["choices"],
             "default": options[option_name]["default"]
