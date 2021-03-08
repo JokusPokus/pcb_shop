@@ -10,7 +10,10 @@ from article.board_options import OPTIONS
 DEFAULT_CATEGORY = 1
 
 
-class Article(models.model):
+class Article(models.Model):
+    """Model for any article sold in the shop,
+    including - but not constrained to - PCBs.
+    """
 
     created = models.DateTimeField(auto_now_add=True)
     category = models.ForeignKey(
@@ -23,7 +26,8 @@ class Article(models.model):
         ordering = ['created']
 
 
-class ArticleCategory(models.model):
+class ArticleCategory(models.Model):
+    """Model for article categories, such as PCBs."""
 
     articleCategoryID = models.PositiveIntegerField(primary_key=True)
     created = models.DateTimeField(auto_now_add=True)
@@ -32,7 +36,10 @@ class ArticleCategory(models.model):
     description = models.TextField(max_length=200)
 
 
-class Board(models.model):
+class Board(models.Model):
+    """Model for PCBs, based on constantly updated
+    board option constraints.
+    """
 
     @staticmethod
     def choice_args(option_name: str, options: dict = OPTIONS) -> dict:
