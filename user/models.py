@@ -18,8 +18,8 @@ from user.address_management import Address
 
 
 class Profile(models.Model):
+    """Extends the inbuilt User model to add more information about a User."""
 
-    # OneToOneField makes Profile an "extension" of the in-built User model
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 
     created = models.DateTimeField(auto_now_add=True)
@@ -56,6 +56,8 @@ def save_user_profile(sender, instance, **kwargs):
 # **********
 
 class BasketItem(models.Model):
+    """Model for articles that are contained in a user's basket."""
+
     created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
