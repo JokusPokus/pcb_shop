@@ -9,13 +9,23 @@ MAX_DIM_X = 400
 MIN_DIM_Y = 6
 MAX_DIM_Y = 500
 
+# Maximum number of different designs
+MAX_NUM_DESIGNS = 50
+
 
 class Layer(models.model):
-    pass
+    LAYER_CHOICES = [
+        (1, 1),
+        (2, 2),
+        (4, 4),
+        (6, 6)
+    ]
+    DEFAULT_CHOICE = 2
 
-
-class Design(models.model):
-    pass
+    layerQuantity = models.IntegerField(
+        choices=LAYER_CHOICES,
+        default=DEFAULT_CHOICE
+    )
 
 
 class DeliveryFormat(models.model):
