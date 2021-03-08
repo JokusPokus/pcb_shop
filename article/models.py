@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+import article.board_options as board_opt
 
 
 # Let's set a default category (which we could call "Misc", for example)
