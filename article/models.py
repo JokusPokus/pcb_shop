@@ -13,3 +13,5 @@ class Article(models.model):
 
     class Meta:
         ordering = ['created']
+
+
