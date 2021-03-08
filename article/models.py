@@ -16,6 +16,15 @@ class Article(models.model):
         ordering = ['created']
 
 
+class ArticleCategory(models.model):
+
+    articleCategoryID = models.PositiveIntegerField(primary_key=True)
+    created = models.DateTimeField(auto_now_add=True)
+
+    name = models.CharField(max_length=30)
+    description = models.TextField(max_length=200)
+
+
 class Board(models.model):
 
     created = models.DateTimeField(auto_now_add=True)
