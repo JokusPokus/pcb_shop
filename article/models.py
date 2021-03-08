@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import User
 import article.board_options as board_opt
 
+from article.board_options import MIN_DIM_X, MAX_DIM_X, MIN_DIM_Y, MAX_DIM_Y
+
 
 # Let's set a default category (which we could call "Misc", for example)
 # that products can fall back to in the unlikely event that we delete a category.
@@ -34,6 +36,8 @@ class Board(models.model):
 
     gerberFileName = models.CharField(max_length=100)
     gerberHash = models.CharField(max_length=100)
+    dimensionX = models.FloatField(validators=[MinValueValidator(MIN_DIM_X), MaxValueValidator(MAX_DIM_X)])
+    dimensionY = models.FloatField(validators=[MinValueValidator(MIN_DIM_Y), MaxValueValidator(MAX_DIM_Y)])
 
     class Meta:
         ordering = ['created']
