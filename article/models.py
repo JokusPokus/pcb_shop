@@ -35,17 +35,7 @@ class Article(models.Model):
 
 
 class Board(models.Model):
-    """Model for PCBs, based on constantly updated
-    board option constraints.
-    """
-    def choice_args(option_name: str, options: dict = OPTIONS) -> dict:
-        """Helper function to define model field parameters
-        for categorical board options in a DRY way."""
-        return {
-            "choices": options[option_name]["choices"],
-            "default": options[option_name]["default"]
-        }
-
+    """Model for PCBs"""
     created = models.DateTimeField(auto_now_add=True)
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
     owner = models.ForeignKey(
@@ -62,70 +52,20 @@ class Board(models.Model):
     # Board options
     # *************
 
-    dimensionX = models.FloatField(
-        validators=[MinValueValidator(OPTIONS["dim_x"]["min"]),
-                    MaxValueValidator(OPTIONS["dim_x"]["max"])]
-    )
-    dimensionY = models.FloatField(
-        validators=[MinValueValidator(OPTIONS["dim_y"]["min"]),
-                    MaxValueValidator(OPTIONS["dim_y"]["max"])]
-    )
-
-    differentDesigns = models.PositiveIntegerField(
-        **choice_args("num_designs")
-    )
-
-    layers = models.PositiveIntegerField(
-        **choice_args("layers")
-    )
-
-    deliveryFormat = models.CharField(
-        max_length=30,
-        **choice_args("delivery_format")
-    )
-
-    thickness = models.FloatField(
-        **choice_args("thickness")
-    )
-
-    color = models.CharField(
-        max_length=30,
-        **choice_args("color")
-    )
-
-    surfaceFinish = models.CharField(
-        max_length=30,
-        **choice_args("surface_finish")
-    )
-
-    copperWeight = models.PositiveIntegerField(
-        **choice_args("copper_weight")
-    )
-
-    goldFingers = models.CharField(
-        max_length=30,
-        **choice_args("gold_fingers")
-    )
-
-    castellatedHoles = models.CharField(
-        max_length=30,
-        **choice_args("castellated_holes")
-    )
-
-    removeOrderNum = models.CharField(
-        max_length=30,
-        **choice_args("remove_order_num")
-    )
-
-    confirmProdFile = models.CharField(
-        max_length=30,
-        **choice_args("confirm_prod_file")
-    )
-
-    flyingProbeTest = models.CharField(
-        max_length=30,
-        **choice_args("flying_probe_test")
-    )
+    dimensionX = models.FloatField(validators=[MinValueValidator(0)])
+    dimensionY = models.FloatField(validators=[MinValueValidator(0)])
+    differentDesigns = models.PositiveIntegerField()
+    layers = models.PositiveIntegerField()
+    deliveryFormat = models.CharField(max_length=30)
+    thickness = models.FloatField()
+    color = models.CharField(max_length=30)
+    surfaceFinish = models.CharField(max_length=30)
+    copperWeight = models.PositiveIntegerField()
+    goldFingers = models.CharField(max_length=30)
+    castellatedHoles = models.CharField(max_length=30)
+    removeOrderNum = models.CharField(max_length=30)
+    confirmProdFile = models.CharField(max_length=30)
+    flyingProbeTest = models.CharField(max_length=30)
 
     class Meta:
         ordering = ['created']

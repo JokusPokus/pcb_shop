@@ -30,121 +30,120 @@ E.g.,
 """
 from django.db import models
 
-
 OPTIONS = {
-    # NUMERIC constraints
+    "numeric": {
+        "dim_x": {
+            "min": 6,
+            "max": 400,
+            "default": 100
+        },
 
-    "dim_x": {
-        "min": 6,
-        "max": 400,
-        "default": 100
+        "dim_y": {
+            "min": 6,
+            "max": 500,
+            "default": 100
+        },
     },
 
-    "dim_y": {
-        "min": 6,
-        "max": 500,
-        "default": 100
-    },
+    "categorical": {
+        "num_designs": {
+            "choices": [
+                (1, 1)
+            ],
+            "default": 1
+        },
 
-    # CATEGORICAL constraints
+        "layers": {
+            "choices": [
+                (1, 1),
+                (2, 2),
+            ],
+            "default": 2
+        },
 
-    "num_designs": {
-        "choices": [
-            (1, 1)
-        ],
-        "default": 1
-    },
+        "delivery_format": {
+            "choices": [
+                ("single_pcb", "Single PCB"),
+            ],
+            "default": "single_pcb"
+        },
 
-    "layers": {
-        "choices": [
-            (1, 1),
-            (2, 2),
-        ],
-        "default": 2
-    },
+        "thickness": {
+            "choices": [
+                (0.4, 0.4),
+                (0.6, 0.6),
+                (0.8, 0.8),
+                (1.0, 1.0),
+                (1.2, 1.2),
+                (1.6, 1.6),
+                (2.0, 2.0)
+            ],
+            "default": 1.6
+        },
 
-    "delivery_format": {
-        "choices": [
-            ("single_pcb", "Single PCB"),
-        ],
-        "default": "single_pcb"
-    },
+        "color": {
+            "choices": [
+                ("green", "green"),
+                ("red", "red"),
+                ("yellow", "yellow"),
+                ("blue", "blue"),
+                ("white", "white"),
+                ("black", "black"),
+            ],
+            "default": "green"
+        },
 
-    "thickness": {
-        "choices": [
-            (0.4, 0.4),
-            (0.6, 0.6),
-            (0.8, 0.8),
-            (1.0, 1.0),
-            (1.2, 1.2),
-            (1.6, 1.6),
-            (2.0, 2.0)
-        ],
-        "default": 1.6
-    },
+        "surface_finish": {
+            "choices": [
+                ("hasl_with_lead", "HASL(with lead)"),
+                ("lead_free_hasl", "LeadFree HASL-RoHS"),
+                ("enig-rohs", "ENIG-RoHS")
+            ],
+            "default": "hasl_with_lead"
+        },
 
-    "color": {
-        "choices": [
-            ("green", "green"),
-            ("red", "red"),
-            ("yellow", "yellow"),
-            ("blue", "blue"),
-            ("white", "white"),
-            ("black", "black"),
-        ],
-        "default": "green"
-    },
+        "copper_weight": {
+            "choices": [
+                (1, "1 oz"),
+                (2, "2 oz")
+            ],
+            "default": 1
+        },
 
-    "surface_finish": {
-        "choices": [
-            ("hasl_with_lead", "HASL(with lead)"),
-            ("lead_free_hasl", "LeadFree HASL-RoHS"),
-            ("enig-rohs", "ENIG-RoHS")
-        ],
-        "default": "hasl_with_lead"
-    },
+        "gold_fingers": {
+            "choices": [
+                ("no", "No"),
+                ("yes", "Yes")
+            ],
+            "default": "no"
+        },
 
-    "copper_weight": {
-        "choices": [
-            (1, "1 oz"),
-            (2, "2 oz")
-        ],
-        "default": 1
-    },
+        "castellated_holes": {
+            "choices": [
+                ("no", "No"),
+            ],
+            "default": "no"
+        },
 
-    "gold_fingers": {
-        "choices": [
-            ("no", "No"),
-            ("yes", "Yes")
-        ],
-        "default": "no"
-    },
+        "remove_order_num": {
+            "choices": [
+                ("no", "No"),
+            ],
+            "default": "no"
+        },
 
-    "castellated_holes": {
-        "choices": [
-            ("no", "No"),
-        ],
-        "default": "no"
-    },
+        "confirm_prod_file": {
+            "choices": [
+                ("no", "No"),
+            ],
+            "default": "no"
+        },
 
-    "remove_order_num": {
-        "choices": [
-            ("no", "No"),
-        ],
-        "default": "no"
-    },
-
-    "confirm_prod_file": {
-        "choices": [
-            ("no", "No"),
-        ],
-        "default": "no"
-    },
-
-    "flying_probe_test": {
-        "choices": [
-            ("fully_test", "Fully test")
-        ],
-        "default": "fully_test"
-    },
+        "flying_probe_test": {
+            "choices": [
+                ("fully_test", "Fully test")
+            ],
+            "default": "fully_test"
+        },
+    }
 }
