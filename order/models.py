@@ -1,16 +1,16 @@
 from django.db import models
-from django.db.models import Model
 from django.contrib.auth.models import User
 import article.models
 import user.models
+from user.models import Address
+
 
 
 # **********
 # SHIPPING_METHOD
 # **********
-class ShippingMethod(Model):
-    """Model for Sipping Method"""
-
+class ShippingMethod(models.Model):
+    """Model for Shipping Method"""
     name = models.CharField(max_length=100)
     price = models.FloatField()
     sorter = models.DecimalField()
@@ -24,9 +24,8 @@ class ShippingMethod(Model):
 # **********
 # ORDER_STATE
 # **********
-class OrderState(Model):
+class OrderState(models.Model):
     """Model for Order State"""
-
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=250)
 
@@ -34,9 +33,8 @@ class OrderState(Model):
 # **********
 # ORDER
 # **********
-class Order(Model):
+class Order(models.Model):
     """Model for Order"""
-
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     shipping_method = models.ForeignKey(ShippingMethod, on_delete=models.DO_NOTHING)
     shipping_address = models.ForeignKey(Address, on_delete=models.DO_NOTHING)
@@ -51,9 +49,8 @@ class Order(Model):
 # **********
 # ARTICLE2ORDER
 # **********
-class Article2Order(Model):
+class Article2Order(models.Model):
     """Model for Article 2 Order"""
-
     article = models.ForeignKey(Article, on_delete=models.DO_NOTHING)
     order = models.ForeignKey(Order, on_delete=models.DO_NOTHING)
     created = models.DateTimeField(auto_now_add=True)

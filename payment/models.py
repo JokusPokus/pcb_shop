@@ -1,13 +1,11 @@
 from django.db import models
-from django.db.models import Model
 from order.models import Order
 
 # **********
 # PAYMENT_METHOD
 # **********
-class PaymentMethod(Model):
+class PaymentMethod(models.Model):
     """Model for payment method."""
-
     created = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=100)
     fee = models.FloatField()
@@ -20,7 +18,9 @@ class PaymentMethod(Model):
 # **********
 # PAYMENT
 # **********
-class Payment(Model):
+class Payment(models.Model):
+    """Model for payment."""
     created = models.DateTimeField(auto_now_add=True)
-    paymentMethod = models.ForeignKey(PaymentMethod, on_delete=models.DO_NOTHING, null=True)
+    value = models.FloatField()
+    paymentMethod = models.ForeignKey(PaymentMethod, on_delete=models.DO_NOTHING)
     order = models.ForeignKey(Order, on_delete=models.DO_NOTHING)
