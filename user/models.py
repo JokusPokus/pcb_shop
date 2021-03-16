@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-# from article.models import Article
+from article.models import Article
 from user.address_management import Address
 
 
