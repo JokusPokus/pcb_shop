@@ -32,8 +32,16 @@ class Order(models.Model):
     """Model for Order"""
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     shipping_method = models.ForeignKey(ShippingMethod, on_delete=models.DO_NOTHING)
-    shipping_address = models.ForeignKey(Address, on_delete=models.DO_NOTHING)
-    billing_address = models.ForeignKey(Address, on_delete=models.DO_NOTHING)
+    shipping_address = models.ForeignKey(
+        Address,
+        on_delete=models.DO_NOTHING,
+        related_name='orders_shipping'
+    )
+    billing_address = models.ForeignKey(
+        Address,
+        on_delete=models.DO_NOTHING,
+        related_name='orders_billing'
+    )
     value = models.FloatField()
     vat = models.FloatField()
     order_state = models.ForeignKey(OrderState, on_delete=models.DO_NOTHING)
