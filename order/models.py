@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-import article.models
-import user.models
+from article.models import Article
 from user.models import Address
 
 
