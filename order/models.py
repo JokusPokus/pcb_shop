@@ -5,7 +5,6 @@ import user.models
 from user.models import Address
 
 
-
 # **********
 # SHIPPING_METHOD
 # **********
@@ -31,6 +30,15 @@ class OrderState(models.Model):
 
 
 # **********
+# PAYMENT_STATE
+# **********
+class PaymentState(models.Model):
+    """Model for Pyment State"""
+    name = models.CharField(max_length=100)
+    description = models.CharField(max_length=250)
+
+
+# **********
 # ORDER
 # **********
 class Order(models.Model):
@@ -42,6 +50,7 @@ class Order(models.Model):
     value = models.FloatField()
     vat = models.FloatField()
     order_state = models.ForeignKey(OrderState, on_delete=models.DO_NOTHING)
+    payment_state = models.ForeignKey(PaymentState, on_delete=models.DO_NOTHING)
     created = models.DateTimeField(auto_now_add=True)
     changed = models.DateTimeField(auto_now=True)
 
