@@ -4,9 +4,6 @@ from article.models import Article
 from user.models import Address
 
 
-# **********
-# SHIPPING_METHOD
-# **********
 class ShippingMethod(models.Model):
     """Model for Shipping Method"""
     name = models.CharField(max_length=100)
@@ -19,27 +16,18 @@ class ShippingMethod(models.Model):
         ordering = ['sorter']
 
 
-# **********
-# ORDER_STATE
-# **********
 class OrderState(models.Model):
     """Model for Order State"""
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=250)
 
 
-# **********
-# PAYMENT_STATE
-# **********
 class PaymentState(models.Model):
     """Model for Payment State"""
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=250)
 
 
-# **********
-# ORDER
-# **********
 class Order(models.Model):
     """Model for Order"""
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
@@ -54,9 +42,6 @@ class Order(models.Model):
     changed = models.DateTimeField(auto_now=True)
 
 
-# **********
-# ARTICLE2ORDER
-# **********
 class Article2Order(models.Model):
     """Model for Article 2 Order"""
     article = models.ForeignKey(Article, on_delete=models.DO_NOTHING)

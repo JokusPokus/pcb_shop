@@ -1,9 +1,6 @@
 from django.db import models
 from order.models import Order
 
-# **********
-# PAYMENT_METHOD
-# **********
 class PaymentMethod(models.Model):
     """Model for payment method."""
     created = models.DateTimeField(auto_now_add=True)
@@ -15,9 +12,6 @@ class PaymentMethod(models.Model):
         ordering = ['sorter']
 
 
-# **********
-# PAYMENT
-# **********
 class Payment(models.Model):
     """Model for payment."""
     created = models.DateTimeField(auto_now_add=True)
