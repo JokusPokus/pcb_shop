@@ -1,12 +1,13 @@
 from django.db import models
 from order.models import Order
 
+
 class PaymentMethod(models.Model):
     """Model for payment method."""
     created = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=100)
     fee = models.FloatField()
-    sorter = models.DecimalField()
+    sorter = models.PositiveIntegerField()
 
     class Meta:
         ordering = ['sorter']

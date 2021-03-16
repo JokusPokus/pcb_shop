@@ -8,7 +8,7 @@ class ShippingMethod(models.Model):
     """Model for Shipping Method"""
     name = models.CharField(max_length=100)
     price = models.FloatField()
-    sorter = models.DecimalField()
+    sorter = models.PositiveIntegerField()
     created = models.DateTimeField(auto_now_add=True)
     changed = models.DateTimeField(auto_now=True)
 
