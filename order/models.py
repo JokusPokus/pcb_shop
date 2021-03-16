@@ -33,7 +33,7 @@ class OrderState(models.Model):
 # PAYMENT_STATE
 # **********
 class PaymentState(models.Model):
-    """Model for Pyment State"""
+    """Model for Payment State"""
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=250)
 
