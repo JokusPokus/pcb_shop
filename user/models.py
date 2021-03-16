@@ -11,12 +11,6 @@ from user.address_management import Address
 # USERS
 # **********
 
-# We want to use Django's user model for authentication, but we
-# need to store more information.
-# The solution is presented here:
-# https://simpleisbetterthancomplex.com/tutorial/2016/07/22/how-to-extend-django-user-model.html#onetoone
-
-
 class Profile(models.Model):
     """Extends the inbuilt User model to add more information about a User."""
 
@@ -24,8 +18,20 @@ class Profile(models.Model):
 
     created = models.DateTimeField(auto_now_add=True)
     email = models.EmailField(max_length=254)
-    defaultShippingAddress = models.ForeignKey(Address, on_delete=models.CASCADE, null=True, blank=True)
-    defaultBillingAddress = models.ForeignKey(Address, on_delete=models.CASCADE, null=True, blank=True)
+    defaultShippingAddress = models.OneToOneField(
+        Address,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="user_with_default_shipping_address"
+    )
+    defaultBillingAddress = models.OneToOneField(
+        Address,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="user_with_default_billing_address"
+    )
 
     class Meta:
         ordering = ['created']
