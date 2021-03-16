@@ -13,19 +13,15 @@ from user.address_management import Address
 
 class Profile(models.Model):
     """Extends the inbuilt User model to add more information about a User."""
-
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-
-    created = models.DateTimeField(auto_now_add=True)
-    email = models.EmailField(max_length=254)
-    defaultShippingAddress = models.OneToOneField(
+    default_shipping_address = models.OneToOneField(
         Address,
         on_delete=models.CASCADE,
         null=True,
         blank=True,
         related_name="user_with_default_shipping_address"
     )
-    defaultBillingAddress = models.OneToOneField(
+    default_billing_address = models.OneToOneField(
         Address,
         on_delete=models.CASCADE,
         null=True,
@@ -33,12 +29,6 @@ class Profile(models.Model):
         related_name="user_with_default_billing_address"
     )
 
-    class Meta:
-        ordering = ['created']
-
-
-# We are hooking the create_user_profile and save_user_profile methods
-# to the User model, whenever a save event occurs:
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
@@ -63,7 +53,6 @@ def save_user_profile(sender, instance, **kwargs):
 
 class BasketItem(models.Model):
     """Model for articles that are contained in a user's basket."""
-
     created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
