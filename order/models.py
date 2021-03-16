@@ -61,6 +61,8 @@ class Article2Order(models.Model):
     """Model for Article 2 Order"""
     article = models.ForeignKey(Article, on_delete=models.DO_NOTHING)
     order = models.ForeignKey(Order, on_delete=models.DO_NOTHING)
+    unit_price = models.FloatField()
+    quantity = models.IntegerField()
     created = models.DateTimeField(auto_now_add=True)
     changed = models.DateTimeField(auto_now=True)
 
