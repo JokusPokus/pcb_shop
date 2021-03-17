@@ -3,13 +3,13 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 
 from .models import User
 from .serializers import UserSerializer
-from .permissions import IsAdminOrCreateOnly, IsAuthorized
+from .permissions import IsAuthorized
 
 
-class UserList(generics.ListCreateAPIView):
+class UserList(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAdminOrCreateOnly]
+    permission_classes = [IsAdminUser]
 
 
 class UserDetails(generics.RetrieveDestroyAPIView):
