@@ -6,6 +6,9 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'password')
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
 
     def create(self, validated_data):
         user = super().create(validated_data)
@@ -19,4 +22,4 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ('default_shipping_address', 'default_billing_address')
+        fields = ('default_shipping_address', 'default_billing_address', 'user')

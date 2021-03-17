@@ -11,8 +11,4 @@ class IsAdminOrCreateOnly(BasePermission):
 
 class IsAuthorized(BasePermission):
     def has_permission(self, request, view):
-        print(request.user.id)
-        print(type(request.user.id))
-        print(view.kwargs.get("pk"))
-        print(type(view.kwargs.get("pk")))
         return request.user.id == view.kwargs.get("pk")
