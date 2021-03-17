@@ -2,10 +2,20 @@ from rest_framework import serializers
 from .models import User, Profile
 
 
+class ProfileSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Profile
+        fields = ('default_shipping_address', 'default_billing_address')
+
+
 class UserSerializer(serializers.ModelSerializer):
+    profile = ProfileSerializer()
+
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'password')
+        fields = ('id', 'email', 'password', 'profile')
+        depth = 2
         extra_kwargs = {
             'password': {'write_only': True}
         }
@@ -16,10 +26,3 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
-
-class ProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
-
-    class Meta:
-        model = Profile
-        fields = ('default_shipping_address', 'default_billing_address', 'user')
