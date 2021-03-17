@@ -3,6 +3,10 @@ import pytest
 
 @pytest.mark.django_db
 def test_register_user_with_valid_credentials(client):
+    """GIVEN a set of valid credentials
+    WHEN a user tries to register
+    THEN registration is successful.
+    """
     VALID_CREDENTIALS = {
         "email": "charly@gmail.com",
         "password1": "SuperStrongPassword",
@@ -62,6 +66,11 @@ def test_reject_register_user_with_invalid_credentials(
         expected_response_key,
         expected_response_message
 ):
+    """GIVEN a set of invalid credentials
+    WHEN a user tries to register
+    THEN registration is rejected and an appropriate error
+    message is returned in the HttpResponse.
+    """
     response = client.post(path="/auth/registration/", data=credentials)
 
     assert response.status_code == 400
@@ -72,10 +81,3 @@ def test_reject_register_user_with_invalid_credentials(
         pytest.fail("Did not receive expected response.")
     else:
         assert actual_message[0] == expected_response_message
-
-
-
-
-
-
-
