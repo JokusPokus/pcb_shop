@@ -34,10 +34,8 @@ class Article(models.Model):
         ordering = ['created']
 
 
-class Board(models.Model):
+class Board(Article):
     """Model for PCBs"""
-    created = models.DateTimeField(auto_now_add=True)
-    article = models.ForeignKey(Article, on_delete=models.CASCADE)
     owner = models.ForeignKey(
         User,
         related_name='boards',
