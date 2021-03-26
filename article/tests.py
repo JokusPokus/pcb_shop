@@ -98,7 +98,7 @@ class TestBoardCreation:
         })
         # Expected response is subset of actual response
         assert expected_response.items() <= response.json().items()
-        assert len(Board.objects.all()) == 1
+        assert Board.objects.all().count() == 1
 
     @pytest.mark.django_db
     def test_reject_create_valid_board_with_anonymous_user(self, client, pcb_category):
