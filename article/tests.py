@@ -8,7 +8,8 @@ from .models import Board, ArticleCategory
 
 @pytest.fixture
 def user_factory(db) -> Callable:
-    # Closure
+    """Returns a closure that can be called to
+    create a standard user."""
     def create_user(
         email: str = "hanno@gmail.com",
         password: str = "pcb_password",
@@ -35,6 +36,9 @@ def user_factory(db) -> Callable:
 
 @pytest.fixture
 def authenticated_client(db, client, user_factory) -> Client:
+    """Authenticates a standard pytest client object
+    and returns the authenticated client.
+    """
     user = user_factory()
     client.force_login(user)
     return client
@@ -42,6 +46,7 @@ def authenticated_client(db, client, user_factory) -> Client:
 
 @pytest.fixture()
 def pcb_category(db) -> None:
+    """Inserts the PCB article category into the test database."""
     pcb_cat = ArticleCategory(
         articleCategoryID=1,
         name="PCB",
@@ -51,6 +56,7 @@ def pcb_category(db) -> None:
 
 
 class TestBoardCreation:
+    """Collection of test cases for creating PCBs."""
     VALID_BOARD_DATA = {
         "dimensionX": 100,
         "dimensionY": 100,
@@ -72,6 +78,14 @@ class TestBoardCreation:
 
     @pytest.mark.django_db
     def test_create_valid_board_with_authenticated_user(self, authenticated_client, pcb_category):
+        """GIVEN valid board data and an authenticated user
+
+        WHEN that user tries to create the board
+
+        THEN a 201 status code and the correct board data
+        with additional meta information is returned.
+        The board is inserted into the database.
+        """
         response = authenticated_client.post(path="/shop/user/boards/", data=self.VALID_BOARD_DATA)
         assert response.status_code == 201
 
@@ -87,7 +101,14 @@ class TestBoardCreation:
         assert len(Board.objects.all()) == 1
 
     @pytest.mark.django_db
-    def test_reject_create_valid_board_with_unauthenticated_user(self, client, pcb_category):
+    def test_reject_create_valid_board_with_anonymous_user(self, client, pcb_category):
+        """GIVEN valid board data and an anonymous user
+
+        WHEN that user tries to create the board
+
+        THEN a 403 status code and a rejection message is returned.
+        The board is not inserted into the database.
+        """
         response = client.post(path="/shop/user/boards/", data=self.VALID_BOARD_DATA)
         assert response.status_code == 403
 
@@ -99,11 +120,21 @@ class TestBoardCreation:
 
     @pytest.mark.django_db
     def test_reject_create_incomplete_board(self, authenticated_client, pcb_category):
+        """GIVEN incomplete board data and an authenticated user
+
+        WHEN that user tries to create the board
+
+        THEN a 400 status code and an appropriate error message is returned.
+        The board is not inserted into the database.
+        """
         def create_board_without(attr):
+            """Sends POST request to create a board where the :attr:
+            information is missing and returns the response.
+            """
             board_data = self.VALID_BOARD_DATA.copy()
             del board_data[attr]
-            response = authenticated_client.post(path="/shop/user/boards/", data=board_data)
-            return response
+            res = authenticated_client.post(path="/shop/user/boards/", data=board_data)
+            return res
 
         for attribute in self.VALID_BOARD_DATA:
             response = create_board_without(attribute)
