@@ -101,7 +101,7 @@ class TestBoardCreation:
         assert Board.objects.all().count() == 1
 
     @pytest.mark.django_db
-    def test_reject_create_valid_board_with_anonymous_user(self, client, pcb_category):
+    def test_reject_creating_valid_board_with_anonymous_user(self, client, pcb_category):
         """GIVEN valid board data and an anonymous user
 
         WHEN that user tries to create the board
@@ -119,7 +119,7 @@ class TestBoardCreation:
         assert not Board.objects.all().exists()
 
     @pytest.mark.django_db
-    def test_reject_create_incomplete_board(self, authenticated_client, pcb_category):
+    def test_reject_creating_incomplete_board(self, authenticated_client, pcb_category):
         """GIVEN incomplete board data and an authenticated user
 
         WHEN that user tries to create the board
