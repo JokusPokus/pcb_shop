@@ -1,7 +1,7 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 
-from .models import Board
+from .models import Board, ArticleCategory
 from .serializers import BoardSerializer
 
 
@@ -17,4 +17,5 @@ class BoardList(generics.ListCreateAPIView):
         return Board.objects.filter(owner=user)
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        category = ArticleCategory.objects.get(name="PCB")
+        serializer.save(owner=self.request.user, category=category)
