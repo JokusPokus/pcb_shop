@@ -12,14 +12,11 @@ class ArticleSerializer(serializers.ModelSerializer):
 
 
 class BoardSerializer(serializers.ModelSerializer):
-    article = ArticleSerializer()
+    article = ArticleSerializer(read_only=True)
 
     class Meta:
         model = Board
-        fields = (
+        fields = '__all__'
+        read_only_fields = (
             'owner',
-            'created',
-            'category',
-            'dimensionX',
-            'dimensionY',
         )
