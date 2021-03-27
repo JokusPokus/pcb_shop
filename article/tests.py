@@ -238,3 +238,15 @@ class TestBoardList:
 
         assert isinstance(response.json(), List)
         assert len(response.json()) == 0
+
+
+class TestBoardDetails:
+    """Collection of test cases for retrieving board details."""
+    def test_get_details_for_owned_board(self):
+        pass
+
+    def test_not_get_details_for_other_users_board(self):
+        pass
+
+    def test_get_404_for_non_exiting_board(self):
+        pass
