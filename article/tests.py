@@ -1,5 +1,5 @@
 import pytest
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Dict
 from django.test import Client
 
 from user.models import User
@@ -55,9 +55,9 @@ def pcb_category(db) -> None:
     pcb_cat.save()
 
 
-class TestBoardCreation:
-    """Collection of test cases for creating PCBs."""
-    VALID_BOARD_DATA = {
+@pytest.fixture()
+def valid_board_data() -> Dict:
+    return {
         "dimensionX": 100,
         "dimensionY": 100,
         "gerberFileName": "gerber.zip",
@@ -76,8 +76,15 @@ class TestBoardCreation:
         "flyingProbeTest": "no"
     }
 
+
+class TestBoardCreation:
+    """Collection of test cases for creating PCBs."""
     @pytest.mark.django_db
-    def test_create_valid_board_with_authenticated_user(self, authenticated_client, pcb_category):
+    def test_create_valid_board_with_authenticated_user(
+            self,
+            authenticated_client,
+            pcb_category,
+            valid_board_data):
         """GIVEN valid board data and an authenticated user
 
         WHEN that user tries to create the board
@@ -86,11 +93,11 @@ class TestBoardCreation:
         with additional meta information is returned.
         The board is inserted into the database.
         """
-        response = authenticated_client.post(path="/shop/user/boards/", data=self.VALID_BOARD_DATA)
+        response = authenticated_client.post(path="/shop/user/boards/", data=valid_board_data)
         assert response.status_code == 201
 
         # Expected to return board data with some extra information
-        expected_response = self.VALID_BOARD_DATA.copy()
+        expected_response = valid_board_data.copy()
         expected_response.update({
             'category': 'PCB',
             'id': 1,
@@ -101,7 +108,11 @@ class TestBoardCreation:
         assert Board.objects.all().count() == 1
 
     @pytest.mark.django_db
-    def test_reject_creating_valid_board_with_anonymous_user(self, client, pcb_category):
+    def test_reject_creating_valid_board_with_anonymous_user(
+            self,
+            client,
+            pcb_category,
+            valid_board_data):
         """GIVEN valid board data and an anonymous user
 
         WHEN that user tries to create the board
@@ -109,7 +120,7 @@ class TestBoardCreation:
         THEN a 403 status code and a rejection message is returned.
         The board is not inserted into the database.
         """
-        response = client.post(path="/shop/user/boards/", data=self.VALID_BOARD_DATA)
+        response = client.post(path="/shop/user/boards/", data=valid_board_data)
         assert response.status_code == 403
 
         expected_response = {
@@ -119,7 +130,10 @@ class TestBoardCreation:
         assert not Board.objects.all().exists()
 
     @pytest.mark.django_db
-    def test_reject_creating_incomplete_board(self, authenticated_client, pcb_category):
+    def test_reject_creating_incomplete_board(self,
+                                              authenticated_client,
+                                              pcb_category,
+                                              valid_board_data):
         """GIVEN incomplete board data and an authenticated user
 
         WHEN that user tries to create the board
@@ -131,12 +145,12 @@ class TestBoardCreation:
             """Sends POST request to create a board where the :attr:
             information is missing and returns the response.
             """
-            board_data = self.VALID_BOARD_DATA.copy()
+            board_data = valid_board_data.copy()
             del board_data[attr]
             res = authenticated_client.post(path="/shop/user/boards/", data=board_data)
             return res
 
-        for attribute in self.VALID_BOARD_DATA:
+        for attribute in valid_board_data:
             response = create_board_without(attribute)
             assert response.status_code == 400
 
@@ -147,3 +161,14 @@ class TestBoardCreation:
             }
             assert response.json() == expected_response
             assert not Board.objects.all().exists()
+
+
+class TestBoardList:
+    """Collection of test cases for retrieving board lists."""
+    @pytest.mark.django_db
+    def test_get_list_of_owned_boards(self):
+        pass
+
+    @pytest.mark.django_db
+    def test_not_get_list_of_other_users_boards(self):
+        pass
