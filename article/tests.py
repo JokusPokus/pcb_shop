@@ -242,12 +242,20 @@ class TestBoardList:
 
 class TestBoardDetails:
     """Collection of test cases for retrieving board details."""
+    @pytest.mark.django_db
     def test_get_details_for_owned_board(
             self,
             authenticated_client,
             pcb_category,
             valid_board_data
     ):
+        """GIVEN an authenticated user who has created a board
+
+        WHEN they request details of that board (GET)
+
+        THEN those details are returned together with
+        a 200 status code, listing the user as board owner.
+        """
         post_response = authenticated_client.post(path=reverse("shop:board_list"), data=valid_board_data)
         board_id = post_response.json()["id"]
 
@@ -260,6 +268,7 @@ class TestBoardDetails:
         # Data used to create the board is contained in the response body
         assert valid_board_data.items() <= board_details.items()
 
+    @pytest.mark.django_db
     def test_not_get_details_for_other_users_board(
             self,
             authenticated_client,
@@ -267,6 +276,13 @@ class TestBoardDetails:
             pcb_category,
             valid_board_data
     ):
+        """GIVEN an authenticated user who has created a board
+
+        WHEN a different user requests details of that board (GET)
+
+        THEN permission is rejected together with a 403
+        status code.
+        """
         # One user creates a board
         post_response = authenticated_client.post(path=reverse("shop:board_list"), data=valid_board_data)
         board_id = post_response.json()["id"]
@@ -279,10 +295,17 @@ class TestBoardDetails:
         assert get_response.status_code == 403
         assert get_response.json().get("detail") == "You do not have permission to perform this action."
 
+    @pytest.mark.django_db
     def test_get_404_for_non_exiting_board(
             self,
             authenticated_client,
     ):
+        """GIVEN an authenticated user
+
+        WHEN they request details of a board that does not exist (GET)
+
+        THEN a 404 response is received.
+        """
         response = authenticated_client.get(path=reverse("shop:board_details", args=[1]))
 
         assert response.status_code == 404
