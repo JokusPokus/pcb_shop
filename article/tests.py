@@ -1,6 +1,8 @@
 import pytest
 from typing import Callable, List, Optional, Dict
+
 from django.test import Client
+from django.urls import reverse
 
 from user.models import User
 from article.models import Board, ArticleCategory
@@ -96,7 +98,8 @@ class TestBoardCreation:
             self,
             authenticated_client,
             pcb_category,
-            valid_board_data):
+            valid_board_data
+    ):
         """GIVEN valid board data and an authenticated user
 
         WHEN that user tries to create the board
@@ -105,7 +108,7 @@ class TestBoardCreation:
         with additional meta information is returned.
         The board is inserted into the database.
         """
-        response = authenticated_client.post(path="/shop/user/boards/", data=valid_board_data)
+        response = authenticated_client.post(path=reverse("shop:board_list"), data=valid_board_data)
         assert response.status_code == 201
 
         # Expected to return board data with some extra information
@@ -124,7 +127,8 @@ class TestBoardCreation:
             self,
             client,
             pcb_category,
-            valid_board_data):
+            valid_board_data
+    ):
         """GIVEN valid board data and an anonymous user
 
         WHEN that user tries to create the board
@@ -132,7 +136,7 @@ class TestBoardCreation:
         THEN a 403 status code and a rejection message is returned.
         The board is not inserted into the database.
         """
-        response = client.post(path="/shop/user/boards/", data=valid_board_data)
+        response = client.post(path=reverse("shop:board_list"), data=valid_board_data)
         assert response.status_code == 403
 
         expected_response = {
@@ -146,7 +150,8 @@ class TestBoardCreation:
             self,
             authenticated_client,
             pcb_category,
-            valid_board_data):
+            valid_board_data
+    ):
         """GIVEN incomplete board data and an authenticated user
 
         WHEN that user tries to create the board
@@ -160,7 +165,7 @@ class TestBoardCreation:
             """
             board_data = valid_board_data.copy()
             del board_data[attr]
-            res = authenticated_client.post(path="/shop/user/boards/", data=board_data)
+            res = authenticated_client.post(path=reverse("shop:board_list"), data=board_data)
             return res
 
         for attribute in valid_board_data:
@@ -183,11 +188,20 @@ class TestBoardList:
             self,
             authenticated_client,
             pcb_category,
-            valid_board_data):
-        for _ in range(3):
-            authenticated_client.post(path="/shop/user/boards/", data=valid_board_data)
+            valid_board_data
+    ):
+        """GIVEN an authenticated user who has created some boards
 
-        response = authenticated_client.get(path="/shop/user/boards/")
+        WHEN that user requests a list of their boards (GET)
+
+        THEN all of the created boards are present, and the HTTP
+        response contains the complete information for all boards.
+        The user is listed as board owner.
+        """
+        for _ in range(3):
+            authenticated_client.post(path=reverse("shop:board_list"), data=valid_board_data)
+
+        response = authenticated_client.get(path=reverse("shop:board_list"))
         assert response.status_code == 200
 
         board_list = response.json()
@@ -207,13 +221,20 @@ class TestBoardList:
             pcb_category,
             valid_board_data
     ):
+        """GIVEN an authenticated user who has created some boards
+
+        WHEN a different user requests a list of their own boards (GET)
+
+        THEN none of the former user's boards are present in the HTTP
+        response - instead, the response contains an empty list.
+        """
         # One user creates a board
-        authenticated_client.post(path="/shop/user/boards/", data=valid_board_data)
+        authenticated_client.post(path=reverse("shop:board_list"), data=valid_board_data)
 
         # A different user requests a list of their boards
         authenticated_client.logout()
         authenticated_client.force_login(other_user)
-        response = authenticated_client.get(path="/shop/user/boards/")
+        response = authenticated_client.get(path=reverse("shop:board_list"))
 
         assert isinstance(response.json(), List)
         assert len(response.json()) == 0
