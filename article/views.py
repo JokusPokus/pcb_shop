@@ -1,3 +1,5 @@
+from django.http import Http404
+
 from rest_framework import generics
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from .permissions import IsBoardOwner
@@ -34,3 +36,8 @@ class BoardDetails(generics.RetrieveAPIView):
     serializer_class = BoardSerializer
     permission_classes = [IsAdminUser | (IsAuthenticated & IsBoardOwner)]
 
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            return super().dispatch(request, *args, **kwargs)
+        except Board.DoesNotExist:
+            raise Http404

@@ -242,11 +242,47 @@ class TestBoardList:
 
 class TestBoardDetails:
     """Collection of test cases for retrieving board details."""
-    def test_get_details_for_owned_board(self):
-        pass
+    def test_get_details_for_owned_board(
+            self,
+            authenticated_client,
+            pcb_category,
+            valid_board_data
+    ):
+        post_response = authenticated_client.post(path=reverse("shop:board_list"), data=valid_board_data)
+        board_id = post_response.json()["id"]
 
-    def test_not_get_details_for_other_users_board(self):
-        pass
+        get_response = authenticated_client.get(path=reverse("shop:board_details", args=[board_id]))
+        board_details = get_response.json()
 
-    def test_get_404_for_non_exiting_board(self):
-        pass
+        assert get_response.status_code == 200
+        assert board_details["owner"] == "user@gmail.com"
+
+        # Data used to create the board is contained in the response body
+        assert valid_board_data.items() <= board_details.items()
+
+    def test_not_get_details_for_other_users_board(
+            self,
+            authenticated_client,
+            other_user,
+            pcb_category,
+            valid_board_data
+    ):
+        # One user creates a board
+        post_response = authenticated_client.post(path=reverse("shop:board_list"), data=valid_board_data)
+        board_id = post_response.json()["id"]
+
+        # A different user requests details about that board
+        authenticated_client.logout()
+        authenticated_client.force_login(other_user)
+        get_response = authenticated_client.get(path=reverse("shop:board_details", args=[board_id]))
+
+        assert get_response.status_code == 403
+        assert get_response.json().get("detail") == "You do not have permission to perform this action."
+
+    def test_get_404_for_non_exiting_board(
+            self,
+            authenticated_client,
+    ):
+        response = authenticated_client.get(path=reverse("shop:board_details", args=[1]))
+
+        assert response.status_code == 404
