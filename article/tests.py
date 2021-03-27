@@ -3,7 +3,7 @@ from typing import Callable, List, Optional
 from django.test import Client
 
 from user.models import User
-from .models import Board, ArticleCategory
+from article.models import Board, ArticleCategory
 
 
 @pytest.fixture
