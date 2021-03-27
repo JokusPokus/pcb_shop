@@ -11,11 +11,11 @@ def user_factory(db) -> Callable:
     """Returns a closure that can be called to
     create a standard user."""
     def create_user(
-        email: str = "hanno@gmail.com",
+        email: str = "user@gmail.com",
         password: str = "pcb_password",
-        username: str = "Hanno",
-        first_name: Optional[str] = "Hanno",
-        last_name: Optional[str] = "vom Krähenwald",
+        username: str = "example_user",
+        first_name: Optional[str] = "Max",
+        last_name: Optional[str] = "Mustermann",
         is_staff: str = False,
         is_superuser: str = False,
         is_active: str = True
@@ -35,11 +35,23 @@ def user_factory(db) -> Callable:
 
 
 @pytest.fixture
-def authenticated_client(db, client, user_factory) -> Client:
-    """Authenticates a standard pytest client object
-    and returns the authenticated client.
+def user(user_factory) -> User:
+    return user_factory()
+
+
+@pytest.fixture
+def other_user(user_factory) -> User:
+    return user_factory(
+        email="other_user@gmail.com",
+        username="other_example_user"
+    )
+
+
+@pytest.fixture
+def authenticated_client(db, client, user) -> Client:
+    """Returns standard pytest client authenticated
+    with a given user.
     """
-    user = user_factory()
     client.force_login(user)
     return client
 
@@ -101,7 +113,7 @@ class TestBoardCreation:
         expected_response.update({
             'category': 'PCB',
             'id': 1,
-            'owner': 'hanno@gmail.com'
+            'owner': 'user@gmail.com'
         })
         # Expected response is subset of actual response
         assert expected_response.items() <= response.json().items()
@@ -130,10 +142,11 @@ class TestBoardCreation:
         assert not Board.objects.all().exists()
 
     @pytest.mark.django_db
-    def test_reject_creating_incomplete_board(self,
-                                              authenticated_client,
-                                              pcb_category,
-                                              valid_board_data):
+    def test_reject_creating_incomplete_board(
+            self,
+            authenticated_client,
+            pcb_category,
+            valid_board_data):
         """GIVEN incomplete board data and an authenticated user
 
         WHEN that user tries to create the board
@@ -141,7 +154,7 @@ class TestBoardCreation:
         THEN a 400 status code and an appropriate error message is returned.
         The board is not inserted into the database.
         """
-        def create_board_without(attr):
+        def create_board_without(attr: str):
             """Sends POST request to create a board where the :attr:
             information is missing and returns the response.
             """
@@ -166,9 +179,41 @@ class TestBoardCreation:
 class TestBoardList:
     """Collection of test cases for retrieving board lists."""
     @pytest.mark.django_db
-    def test_get_list_of_owned_boards(self):
-        pass
+    def test_get_list_of_owned_boards(
+            self,
+            authenticated_client,
+            pcb_category,
+            valid_board_data):
+        for _ in range(3):
+            authenticated_client.post(path="/shop/user/boards/", data=valid_board_data)
+
+        response = authenticated_client.get(path="/shop/user/boards/")
+        assert response.status_code == 200
+
+        board_list = response.json()
+        assert len(board_list) == 3
+
+        for board in board_list:
+            assert board["owner"] == "user@gmail.com"
+
+            # Data used to create the board is contained in the response body
+            assert valid_board_data.items() <= board.items()
 
     @pytest.mark.django_db
-    def test_not_get_list_of_other_users_boards(self):
-        pass
+    def test_board_list_does_not_contain_other_users_boards(
+            self,
+            authenticated_client,
+            other_user,
+            pcb_category,
+            valid_board_data
+    ):
+        # One user creates a board
+        authenticated_client.post(path="/shop/user/boards/", data=valid_board_data)
+
+        # A different user requests a list of their boards
+        authenticated_client.logout()
+        authenticated_client.force_login(other_user)
+        response = authenticated_client.get(path="/shop/user/boards/")
+
+        assert isinstance(response.json(), List)
+        assert len(response.json()) == 0
