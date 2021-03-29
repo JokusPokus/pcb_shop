@@ -3,7 +3,6 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 
 from .models import User
 from .serializers import UserSerializer
-from .permissions import IsAuthorized
 
 
 class UserList(generics.ListAPIView):
@@ -15,4 +14,8 @@ class UserList(generics.ListAPIView):
 class UserDetails(generics.RetrieveDestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAdminUser | (IsAuthenticated & IsAuthorized)]
+    permission_classes = [IsAdminUser | IsAuthenticated]
+
+    def get_queryset(self):
+        current_user_id = self.request.user.id
+        return User.objects.get(pk=current_user_id)
