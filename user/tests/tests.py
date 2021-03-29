@@ -2,11 +2,11 @@ import pytest
 
 from django.urls import reverse
 
-from .models import User
+from user.models import User
 
 
 @pytest.mark.django_db
-class TestUserRegistration:
+class TestUserRegistrationSuccess:
     VALID_CREDENTIALS = {
         "email": "charly@gmail.com",
         "password1": "SuperStrongPassword",
