@@ -81,3 +81,15 @@ def test_reject_register_user_with_invalid_credentials(
         pytest.fail("Did not receive expected response.")
     else:
         assert actual_message[0] == expected_response_message
+
+
+class TestUserDetails:
+    """Test collection for retrieving user details."""
+    def test_user_gets_their_details(self):
+        pass
+
+    def test_user_does_not_get_other_users_details(self):
+        pass
+
+    def test_unauthenticated_user_does_not_get_user_details(self):
+        pass
