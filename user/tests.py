@@ -1,7 +1,11 @@
 import pytest
+
+from django.urls import reverse
+
 from .models import User
 
 
+@pytest.mark.django_db
 class TestUserRegistration:
     VALID_CREDENTIALS = {
         "email": "charly@gmail.com",
@@ -24,7 +28,6 @@ class TestUserRegistration:
         "password2": "DifferentPassword"
     }
 
-    @pytest.mark.django_db
     def test_register_user_with_valid_credentials(self, client):
         """GIVEN a set of valid credentials
 
@@ -62,7 +65,6 @@ class TestUserRegistration:
             )
         ]
     )
-    @pytest.mark.django_db
     def test_reject_register_user_with_invalid_credentials(
             self,
             client,
@@ -92,13 +94,27 @@ class TestUserRegistration:
         assert not User.objects.all().exists()
 
 
+@pytest.mark.django_db
 class TestUserDetails:
     """Test collection for retrieving user details."""
-    def test_user_gets_their_details(self):
-        pass
+    def test_user_gets_their_details(self, authenticated_client, user):
+        response = authenticated_client.get(path=reverse("user:user_details"))
+        assert response.status_code == 200
 
-    def test_user_does_not_get_other_users_details(self):
-        pass
+        expected_response = {
+            'email': user.email,
+            'id': user.pk,
+            'profile': {
+                'default_shipping_address': user.profile.default_shipping_address,
+                'default_billing_address': user.profile.default_billing_address
+            }
+        }
+        assert response.json() == expected_response
 
-    def test_unauthenticated_user_does_not_get_user_details(self):
-        pass
+    def test_unauthenticated_user_does_not_get_user_details(self, client):
+        response = client.get(path=reverse("user:user_details"))
+        assert response.status_code == 403
+
+        expected_response = {'detail': 'Authentication credentials were not provided.'}
+
+        assert response.json() == expected_response

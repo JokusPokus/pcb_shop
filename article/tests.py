@@ -8,67 +8,6 @@ from user.models import User
 from article.models import Board, ArticleCategory
 
 
-@pytest.fixture
-def user_factory(db) -> Callable:
-    """Returns a closure that can be called to
-    create a standard user."""
-    def create_user(
-        email: str = "user@gmail.com",
-        password: str = "pcb_password",
-        username: str = "example_user",
-        first_name: Optional[str] = "Max",
-        last_name: Optional[str] = "Mustermann",
-        is_staff: str = False,
-        is_superuser: str = False,
-        is_active: str = True
-    ) -> User:
-        user = User.objects.create_user(
-            password=password,
-            first_name=first_name,
-            username=username,
-            last_name=last_name,
-            email=email,
-            is_staff=is_staff,
-            is_superuser=is_superuser,
-            is_active=is_active,
-        )
-        return user
-    return create_user
-
-
-@pytest.fixture
-def user(user_factory) -> User:
-    return user_factory()
-
-
-@pytest.fixture
-def other_user(user_factory) -> User:
-    return user_factory(
-        email="other_user@gmail.com",
-        username="other_example_user"
-    )
-
-
-@pytest.fixture
-def authenticated_client(db, client, user) -> Client:
-    """Returns standard pytest client authenticated
-    with a given user.
-    """
-    client.force_login(user)
-    return client
-
-
-@pytest.fixture()
-def pcb_category(db) -> None:
-    """Inserts the PCB article category into the test database."""
-    pcb_cat = ArticleCategory(
-        articleCategoryID=1,
-        name="PCB",
-        description="Printed Circuit Board"
-    )
-    pcb_cat.save()
-
-
 @pytest.fixture()
 def valid_board_data() -> Dict:
     return {
@@ -91,9 +30,9 @@ def valid_board_data() -> Dict:
     }
 
 
+@pytest.mark.django_db
 class TestBoardCreation:
     """Collection of test cases for creating PCBs."""
-    @pytest.mark.django_db
     def test_create_valid_board_with_authenticated_user(
             self,
             authenticated_client,
@@ -115,14 +54,12 @@ class TestBoardCreation:
         expected_response = valid_board_data.copy()
         expected_response.update({
             'category': 'PCB',
-            'id': 1,
             'owner': 'user@gmail.com'
         })
         # Expected response is subset of actual response
         assert expected_response.items() <= response.json().items()
         assert Board.objects.all().count() == 1
 
-    @pytest.mark.django_db
     def test_reject_creating_valid_board_with_anonymous_user(
             self,
             client,
@@ -145,7 +82,6 @@ class TestBoardCreation:
         assert response.json() == expected_response
         assert not Board.objects.all().exists()
 
-    @pytest.mark.django_db
     def test_reject_creating_incomplete_board(
             self,
             authenticated_client,
@@ -181,9 +117,9 @@ class TestBoardCreation:
             assert not Board.objects.all().exists()
 
 
+@pytest.mark.django_db
 class TestBoardList:
     """Collection of test cases for retrieving board lists."""
-    @pytest.mark.django_db
     def test_get_list_of_owned_boards(
             self,
             authenticated_client,
@@ -213,7 +149,6 @@ class TestBoardList:
             # Data used to create the board is contained in the response body
             assert valid_board_data.items() <= board.items()
 
-    @pytest.mark.django_db
     def test_board_list_does_not_contain_other_users_boards(
             self,
             authenticated_client,
@@ -240,9 +175,9 @@ class TestBoardList:
         assert len(response.json()) == 0
 
 
+@pytest.mark.django_db
 class TestBoardDetails:
     """Collection of test cases for retrieving board details."""
-    @pytest.mark.django_db
     def test_get_details_for_owned_board(
             self,
             authenticated_client,
@@ -268,7 +203,6 @@ class TestBoardDetails:
         # Data used to create the board is contained in the response body
         assert valid_board_data.items() <= board_details.items()
 
-    @pytest.mark.django_db
     def test_not_get_details_for_other_users_board(
             self,
             authenticated_client,
@@ -295,7 +229,6 @@ class TestBoardDetails:
         assert get_response.status_code == 403
         assert get_response.json().get("detail") == "You do not have permission to perform this action."
 
-    @pytest.mark.django_db
     def test_get_404_for_non_exiting_board(
             self,
             authenticated_client,

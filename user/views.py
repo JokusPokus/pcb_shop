@@ -1,3 +1,5 @@
+from django.shortcuts import get_object_or_404
+
 from rest_framework import generics
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 
@@ -16,6 +18,6 @@ class UserDetails(generics.RetrieveDestroyAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAdminUser | IsAuthenticated]
 
-    def get_queryset(self):
-        current_user_id = self.request.user.id
-        return User.objects.get(pk=current_user_id)
+    def get_object(self):
+        current_user_pk = self.request.user.pk
+        return get_object_or_404(User, pk=current_user_pk)
