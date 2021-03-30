@@ -205,7 +205,7 @@ class TestBoardList:
 
 @pytest.mark.usefixtures("create_pcb_category")
 @pytest.mark.django_db
-class TestBoardDetails:
+class TestBoardDetailsSuccess:
     """Collection of test cases for retrieving board details."""
     def test_get_details_for_owned_board(
             self,
@@ -230,6 +230,10 @@ class TestBoardDetails:
         # Data used to create the board is contained in the response body
         assert VALID_BOARD_DATA.items() <= board_details.items()
 
+
+@pytest.mark.usefixtures("create_pcb_category")
+@pytest.mark.django_db
+class TestBoardDetailsFailure:
     def test_not_get_details_for_other_users_board(
             self,
             authenticated_client,
