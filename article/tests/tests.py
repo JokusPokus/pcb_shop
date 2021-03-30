@@ -10,34 +10,56 @@ from article.models import Board, ArticleCategory
 
 @pytest.mark.usefixtures("create_pcb_category")
 @pytest.mark.django_db
-class TestBoardCreation:
-    """Collection of test cases for creating PCBs."""
-    def test_create_valid_board_with_authenticated_user(
+class TestBoardCreationSuccess:
+    """GIVEN valid board data and an authenticated user
+
+    WHEN that user tries to create the board
+
+    THEN a 201 status code and the correct board data
+    with additional meta information is returned.
+    The board is inserted into the database.
+    """
+    @pytest.fixture
+    def create_board_with_authenticated_user(
             self,
             authenticated_client,
             valid_board_data
     ):
-        """GIVEN valid board data and an authenticated user
-
-        WHEN that user tries to create the board
-
-        THEN a 201 status code and the correct board data
-        with additional meta information is returned.
-        The board is inserted into the database.
-        """
         response = authenticated_client.post(path=reverse("shop:board_list"), data=valid_board_data)
+        return response
+
+    def test_correct_http_response(
+            self,
+            create_board_with_authenticated_user,
+            user,
+            valid_board_data
+    ):
+        response = create_board_with_authenticated_user
         assert response.status_code == 201
 
-        # Expected to return board data with some extra information
-        expected_response = valid_board_data.copy()
-        expected_response.update({
-            'category': 'PCB',
-            'owner': 'user@gmail.com'
-        })
-        # Expected response is subset of actual response
-        assert expected_response.items() <= response.json().items()
-        assert Board.objects.all().count() == 1
+        response_body = response.json()
 
+        # Expected to return board data with some extra information
+        expected_response_data = valid_board_data.copy()
+        expected_response_data.update({
+            'category': 'PCB',
+            'owner': user.email,
+        })
+
+        # Expected response data is subset of actual response
+        assert expected_response_data.items() <= response_body.items()
+
+    def test_board_inserted_into_db(
+            self,
+            create_board_with_authenticated_user,
+            valid_board_data
+    ):
+        assert Board.objects.filter(**valid_board_data).exists()
+
+
+@pytest.mark.usefixtures("create_pcb_category")
+@pytest.mark.django_db
+class TestBoardCreationFailure:
     def test_reject_creating_valid_board_with_anonymous_user(
             self,
             client,
