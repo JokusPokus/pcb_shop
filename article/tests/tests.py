@@ -7,6 +7,8 @@ from django.urls import reverse
 from user.models import User
 from article.models import Board, ArticleCategory
 
+from .conftest import VALID_BOARD_DATA
+
 
 @pytest.mark.usefixtures("create_pcb_category")
 @pytest.mark.django_db
@@ -22,17 +24,15 @@ class TestBoardCreationSuccess:
     @pytest.fixture
     def create_board_with_authenticated_user(
             self,
-            authenticated_client,
-            valid_board_data
+            authenticated_client
     ):
-        response = authenticated_client.post(path=reverse("shop:board_list"), data=valid_board_data)
+        response = authenticated_client.post(path=reverse("shop:board_list"), data=VALID_BOARD_DATA)
         return response
 
     def test_correct_http_response(
             self,
             create_board_with_authenticated_user,
-            user,
-            valid_board_data
+            user
     ):
         response = create_board_with_authenticated_user
         assert response.status_code == 201
@@ -40,7 +40,7 @@ class TestBoardCreationSuccess:
         response_body = response.json()
 
         # Expected to return board data with some extra information
-        expected_response_data = valid_board_data.copy()
+        expected_response_data = VALID_BOARD_DATA.copy()
         expected_response_data.update({
             'category': 'PCB',
             'owner': user.email,
@@ -52,57 +52,65 @@ class TestBoardCreationSuccess:
     def test_board_inserted_into_db(
             self,
             create_board_with_authenticated_user,
-            valid_board_data
     ):
-        assert Board.objects.filter(**valid_board_data).exists()
+        assert Board.objects.filter(**VALID_BOARD_DATA).exists()
 
 
 @pytest.mark.usefixtures("create_pcb_category")
 @pytest.mark.django_db
 class TestBoardCreationFailure:
-    def test_reject_creating_valid_board_with_anonymous_user(
+    """GIVEN valid board data and an anonymous user
+
+    WHEN that user tries to create the board
+
+    THEN a 403 status code and a rejection message is returned.
+    The board is not inserted into the database.
+    """
+    @pytest.fixture
+    def create_board_with_anonymous_user(
             self,
-            client,
-            valid_board_data
+            client
     ):
-        """GIVEN valid board data and an anonymous user
+        response = client.post(path=reverse("shop:board_list"), data=VALID_BOARD_DATA)
+        return response
 
-        WHEN that user tries to create the board
-
-        THEN a 403 status code and a rejection message is returned.
-        The board is not inserted into the database.
-        """
-        response = client.post(path=reverse("shop:board_list"), data=valid_board_data)
+    def test_correct_http_response_for_anonymous_user(self, create_board_with_anonymous_user):
+        response = create_board_with_anonymous_user
         assert response.status_code == 403
 
-        expected_response = {
+        response_body = response.json()
+        expected_response_body = {
             "detail": "Authentication credentials were not provided."
         }
-        assert response.json() == expected_response
-        assert not Board.objects.all().exists()
+        assert response_body == expected_response_body
 
-    def test_reject_creating_incomplete_board(
+    def test_board_not_created_for_anonymous_user(
             self,
-            authenticated_client,
-            valid_board_data
+            create_board_with_anonymous_user
+    ):
+        assert not Board.objects.filter(**VALID_BOARD_DATA).exists()
+
+    def test_incomplete_board(
+            self,
+            authenticated_client
     ):
         """GIVEN incomplete board data and an authenticated user
 
         WHEN that user tries to create the board
 
-        THEN a 400 status code and an appropriate error message is returned.
+        THEN a 400 status code and the correct error message are returned.
         The board is not inserted into the database.
         """
         def create_board_without(attr: str):
             """Sends POST request to create a board where the :attr:
             information is missing and returns the response.
             """
-            board_data = valid_board_data.copy()
+            board_data = VALID_BOARD_DATA.copy()
             del board_data[attr]
-            res = authenticated_client.post(path=reverse("shop:board_list"), data=board_data)
-            return res
+            _response = authenticated_client.post(path=reverse("shop:board_list"), data=board_data)
+            return _response
 
-        for attribute in valid_board_data:
+        for attribute in VALID_BOARD_DATA:
             response = create_board_without(attribute)
             assert response.status_code == 400
 
@@ -121,8 +129,7 @@ class TestBoardList:
     """Collection of test cases for retrieving board lists."""
     def test_get_list_of_owned_boards(
             self,
-            authenticated_client,
-            valid_board_data
+            authenticated_client
     ):
         """GIVEN an authenticated user who has created some boards
 
@@ -133,7 +140,7 @@ class TestBoardList:
         The user is listed as board owner.
         """
         for _ in range(3):
-            authenticated_client.post(path=reverse("shop:board_list"), data=valid_board_data)
+            authenticated_client.post(path=reverse("shop:board_list"), data=VALID_BOARD_DATA)
 
         response = authenticated_client.get(path=reverse("shop:board_list"))
         assert response.status_code == 200
@@ -145,13 +152,12 @@ class TestBoardList:
             assert board["owner"] == "user@gmail.com"
 
             # Data used to create the board is contained in the response body
-            assert valid_board_data.items() <= board.items()
+            assert VALID_BOARD_DATA.items() <= board.items()
 
     def test_board_list_does_not_contain_other_users_boards(
             self,
             authenticated_client,
-            other_user,
-            valid_board_data
+            other_user
     ):
         """GIVEN an authenticated user who has created some boards
 
@@ -161,7 +167,7 @@ class TestBoardList:
         response - instead, the response contains an empty list.
         """
         # One user creates a board
-        authenticated_client.post(path=reverse("shop:board_list"), data=valid_board_data)
+        authenticated_client.post(path=reverse("shop:board_list"), data=VALID_BOARD_DATA)
 
         # A different user requests a list of their boards
         authenticated_client.logout()
@@ -179,7 +185,6 @@ class TestBoardDetails:
     def test_get_details_for_owned_board(
             self,
             authenticated_client,
-            valid_board_data
     ):
         """GIVEN an authenticated user who has created a board
 
@@ -188,7 +193,7 @@ class TestBoardDetails:
         THEN those details are returned together with
         a 200 status code, listing the user as board owner.
         """
-        post_response = authenticated_client.post(path=reverse("shop:board_list"), data=valid_board_data)
+        post_response = authenticated_client.post(path=reverse("shop:board_list"), data=VALID_BOARD_DATA)
         board_id = post_response.json()["id"]
 
         get_response = authenticated_client.get(path=reverse("shop:board_details", args=[board_id]))
@@ -198,13 +203,12 @@ class TestBoardDetails:
         assert board_details["owner"] == "user@gmail.com"
 
         # Data used to create the board is contained in the response body
-        assert valid_board_data.items() <= board_details.items()
+        assert VALID_BOARD_DATA.items() <= board_details.items()
 
     def test_not_get_details_for_other_users_board(
             self,
             authenticated_client,
-            other_user,
-            valid_board_data
+            other_user
     ):
         """GIVEN an authenticated user who has created a board
 
@@ -214,7 +218,7 @@ class TestBoardDetails:
         status code.
         """
         # One user creates a board
-        post_response = authenticated_client.post(path=reverse("shop:board_list"), data=valid_board_data)
+        post_response = authenticated_client.post(path=reverse("shop:board_list"), data=VALID_BOARD_DATA)
         board_id = post_response.json()["id"]
 
         # A different user requests details about that board
@@ -227,7 +231,7 @@ class TestBoardDetails:
 
     def test_get_404_for_non_exiting_board(
             self,
-            authenticated_client,
+            authenticated_client
     ):
         """GIVEN an authenticated user
 
