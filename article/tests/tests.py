@@ -8,13 +8,13 @@ from user.models import User
 from article.models import Board, ArticleCategory
 
 
+@pytest.mark.usefixtures("create_pcb_category")
 @pytest.mark.django_db
 class TestBoardCreation:
     """Collection of test cases for creating PCBs."""
     def test_create_valid_board_with_authenticated_user(
             self,
             authenticated_client,
-            pcb_category,
             valid_board_data
     ):
         """GIVEN valid board data and an authenticated user
@@ -41,7 +41,6 @@ class TestBoardCreation:
     def test_reject_creating_valid_board_with_anonymous_user(
             self,
             client,
-            pcb_category,
             valid_board_data
     ):
         """GIVEN valid board data and an anonymous user
@@ -63,7 +62,6 @@ class TestBoardCreation:
     def test_reject_creating_incomplete_board(
             self,
             authenticated_client,
-            pcb_category,
             valid_board_data
     ):
         """GIVEN incomplete board data and an authenticated user
@@ -95,13 +93,13 @@ class TestBoardCreation:
             assert not Board.objects.all().exists()
 
 
+@pytest.mark.usefixtures("create_pcb_category")
 @pytest.mark.django_db
 class TestBoardList:
     """Collection of test cases for retrieving board lists."""
     def test_get_list_of_owned_boards(
             self,
             authenticated_client,
-            pcb_category,
             valid_board_data
     ):
         """GIVEN an authenticated user who has created some boards
@@ -131,7 +129,6 @@ class TestBoardList:
             self,
             authenticated_client,
             other_user,
-            pcb_category,
             valid_board_data
     ):
         """GIVEN an authenticated user who has created some boards
@@ -153,13 +150,13 @@ class TestBoardList:
         assert len(response.json()) == 0
 
 
+@pytest.mark.usefixtures("create_pcb_category")
 @pytest.mark.django_db
 class TestBoardDetails:
     """Collection of test cases for retrieving board details."""
     def test_get_details_for_owned_board(
             self,
             authenticated_client,
-            pcb_category,
             valid_board_data
     ):
         """GIVEN an authenticated user who has created a board
@@ -185,7 +182,6 @@ class TestBoardDetails:
             self,
             authenticated_client,
             other_user,
-            pcb_category,
             valid_board_data
     ):
         """GIVEN an authenticated user who has created a board

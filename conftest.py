@@ -58,7 +58,7 @@ def authenticated_client(client, user) -> Client:
 
 
 @pytest.fixture()
-def pcb_category() -> None:
+def create_pcb_category() -> None:
     """Inserts the PCB article category into the test database."""
     pcb_cat = ArticleCategory(
         articleCategoryID=1,
