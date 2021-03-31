@@ -214,9 +214,10 @@ class TestBoardDetailsSuccess:
 @pytest.mark.usefixtures("create_pcb_category")
 @pytest.mark.django_db
 class TestBoardDetailsFailure:
-    def test_not_get_details_for_other_users_board(
+    def test_no_details_for_other_users_board(
             self,
             authenticated_client,
+            create_boards_with_authenticated_user,
             other_user
     ):
         """GIVEN an authenticated user who has created a board
@@ -227,16 +228,17 @@ class TestBoardDetailsFailure:
         status code.
         """
         # One user creates a board
-        post_response = authenticated_client.post(path=reverse("shop:board_list"), data=VALID_BOARD_DATA)
+        post_response = create_boards_with_authenticated_user(num_boards=1)
         board_id = post_response.json()["id"]
 
         # A different user requests details about that board
         authenticated_client.logout()
         authenticated_client.force_login(other_user)
         get_response = authenticated_client.get(path=reverse("shop:board_details", args=[board_id]))
-
         assert get_response.status_code == 403
-        assert get_response.json().get("detail") == "You do not have permission to perform this action."
+
+        response_body = get_response.json()
+        assert response_body.get("detail") == "You do not have permission to perform this action."
 
     def test_get_404_for_non_exiting_board(
             self,
@@ -248,6 +250,8 @@ class TestBoardDetailsFailure:
 
         THEN a 404 response is received.
         """
-        response = authenticated_client.get(path=reverse("shop:board_details", args=[1]))
+        NON_EXISTING_BOARD_ID = 9999
+        path = reverse("shop:board_details", args=[NON_EXISTING_BOARD_ID])
+        response = authenticated_client.get(path=path)
 
         assert response.status_code == 404
