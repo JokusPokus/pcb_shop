@@ -13,17 +13,9 @@ from .conftest import VALID_BOARD_DATA
 @pytest.mark.usefixtures("create_pcb_category")
 @pytest.mark.django_db
 class TestBoardCreationSuccess:
-    @pytest.fixture
-    def create_board_with_authenticated_user(
-            self,
-            authenticated_client
-    ):
-        response = authenticated_client.post(path=reverse("shop:board_list"), data=VALID_BOARD_DATA)
-        return response
-
     def test_correct_http_response(
             self,
-            create_board_with_authenticated_user,
+            create_boards_with_authenticated_user,
             user
     ):
         """GIVEN valid board data and an authenticated user
@@ -33,7 +25,7 @@ class TestBoardCreationSuccess:
         THEN a 201 status code and the correct board data
         with additional meta information is returned.
         """
-        response = create_board_with_authenticated_user
+        response = create_boards_with_authenticated_user()
         assert response.status_code == 201
 
         response_body = response.json()
@@ -50,7 +42,7 @@ class TestBoardCreationSuccess:
 
     def test_board_inserted_into_db(
             self,
-            create_board_with_authenticated_user,
+            create_boards_with_authenticated_user,
     ):
         """GIVEN valid board data and an authenticated user
 
@@ -58,20 +50,13 @@ class TestBoardCreationSuccess:
 
         THEN the board is inserted into the database.
         """
+        create_boards_with_authenticated_user()
         assert Board.objects.filter(**VALID_BOARD_DATA).exists()
 
 
 @pytest.mark.usefixtures("create_pcb_category")
 @pytest.mark.django_db
 class TestBoardCreationFailure:
-    @pytest.fixture
-    def create_board_with_anonymous_user(
-            self,
-            client
-    ):
-        response = client.post(path=reverse("shop:board_list"), data=VALID_BOARD_DATA)
-        return response
-
     def test_correct_http_response_for_anonymous_user(self, create_board_with_anonymous_user):
         """GIVEN valid board data and an anonymous user
 
@@ -99,20 +84,6 @@ class TestBoardCreationFailure:
         THEN the board is not inserted into the database.
         """
         assert not Board.objects.filter(**VALID_BOARD_DATA).exists()
-
-    @pytest.fixture(params=[key for key in VALID_BOARD_DATA])
-    def create_incomplete_board(
-            self,
-            authenticated_client,
-            request
-    ):
-        """Sends POST request to create a board where the :attr:
-        information is missing and returns the response.
-        """
-        board_data = VALID_BOARD_DATA.copy()
-        del board_data[request.param]
-        _response = authenticated_client.post(path=reverse("shop:board_list"), data=board_data)
-        return request.param, board_data, _response
 
     def test_correct_http_response_to_incomplete_board(self, create_incomplete_board):
         """GIVEN incomplete board data and an authenticated user
@@ -149,17 +120,18 @@ class TestBoardCreationFailure:
 @pytest.mark.usefixtures("create_pcb_category")
 @pytest.mark.django_db
 class TestBoardList:
-    @pytest.fixture()
-    def create_some_boards(self, authenticated_client):
-        for _ in range(3):
-            authenticated_client.post(path=reverse("shop:board_list"), data=VALID_BOARD_DATA)
+    @pytest.fixture
+    def create_and_get_list(self, create_boards_with_authenticated_user, authenticated_client):
+        def get_list(num_boards: int):
+            """Creates :num_boards: boards, retrieves a list of owned boards,
+            and returns the Http response.
+            """
+            create_boards_with_authenticated_user(num_boards)
+            response = authenticated_client.get(path=reverse("shop:board_list"))
+            return response
+        return get_list
 
-    def test_get_list_of_owned_boards(
-            self,
-            create_some_boards,
-            authenticated_client,
-            user
-    ):
+    def test_200_status_and_list_is_complete(self, create_and_get_list):
         """GIVEN an authenticated user who has created some boards
 
         WHEN that user requests a list of their boards (GET)
@@ -168,12 +140,16 @@ class TestBoardList:
         response contains the complete information for all boards.
         The user is listed as board owner.
         """
-        response = authenticated_client.get(path=reverse("shop:board_list"))
+        NUM_BOARDS = 3
+        response = create_and_get_list(NUM_BOARDS)
         assert response.status_code == 200
 
         board_list = response.json()
-        assert len(board_list) == 3
+        assert len(board_list) == NUM_BOARDS
 
+    def test_boards_in_list_have_correct_owner(self, create_and_get_list, user):
+        response = create_and_get_list(num_boards=3)
+        board_list = response.json()
         for board in board_list:
             assert board["owner"] == user.email
 
@@ -182,7 +158,7 @@ class TestBoardList:
 
     def test_board_list_does_not_contain_other_users_boards(
             self,
-            create_some_boards,
+            create_boards_with_authenticated_user,
             client,
             other_user
     ):
@@ -193,7 +169,9 @@ class TestBoardList:
         THEN none of the former user's boards are present in the HTTP
         response - instead, the response contains an empty list.
         """
-        # Some boards are created within the create_some_boards fixture.
+        # One user creates a board.
+        create_boards_with_authenticated_user(num_boards=1)
+
         # A different user who has not created boards yet requests a list of her boards.
         client.force_login(other_user)
         response = client.get(path=reverse("shop:board_list"))
