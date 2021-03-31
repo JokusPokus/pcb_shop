@@ -188,6 +188,8 @@ class TestBoardDetailsSuccess:
     def test_get_details_for_owned_board(
             self,
             authenticated_client,
+            user,
+            create_boards_with_authenticated_user
     ):
         """GIVEN an authenticated user who has created a board
 
@@ -196,14 +198,14 @@ class TestBoardDetailsSuccess:
         THEN those details are returned together with
         a 200 status code, listing the user as board owner.
         """
-        post_response = authenticated_client.post(path=reverse("shop:board_list"), data=VALID_BOARD_DATA)
+        post_response = create_boards_with_authenticated_user(num_boards=1)
         board_id = post_response.json()["id"]
 
         get_response = authenticated_client.get(path=reverse("shop:board_details", args=[board_id]))
         board_details = get_response.json()
 
         assert get_response.status_code == 200
-        assert board_details["owner"] == "user@gmail.com"
+        assert board_details["owner"] == user.email
 
         # Data used to create the board is contained in the response body
         assert VALID_BOARD_DATA.items() <= board_details.items()
