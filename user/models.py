@@ -14,20 +14,6 @@ from user.address_management import Address
 class Profile(models.Model):
     """Extends the inbuilt User model to add more information about a User."""
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    default_shipping_address = models.OneToOneField(
-        Address,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name="user_with_default_shipping_address"
-    )
-    default_billing_address = models.OneToOneField(
-        Address,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name="user_with_default_billing_address"
-    )
 
 
 @receiver(post_save, sender=User)

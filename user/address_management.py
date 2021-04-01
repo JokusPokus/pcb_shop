@@ -13,3 +13,6 @@ class Address(models.Model):
 
     # Each address is necessarily linked to exactly one user
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name="addresses", default=1)
+
+    is_shipping_default = models.BooleanField(default=False)
+    is_billing_default = models.BooleanField(default=False)

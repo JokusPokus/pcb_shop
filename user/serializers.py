@@ -15,8 +15,7 @@ class AddressSerializer(serializers.ModelSerializer):
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ('default_shipping_address', 'default_billing_address')
-        depth = 2
+        exclude = ('id', 'user')
 
 
 class UserSerializer(serializers.ModelSerializer):
