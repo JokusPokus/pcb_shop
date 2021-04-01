@@ -12,4 +12,4 @@ class Address(models.Model):
     zip_code = models.CharField(max_length=5, default="99999")
 
     # Each address is necessarily linked to exactly one user
-    user = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name="addresses", default=1)

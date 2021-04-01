@@ -6,7 +6,10 @@ from .address_management import Address
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
-        exclude = ('user', )
+        fields = '__all__'
+        extra_kwargs = {
+            'user_id': {'write_only': True}
+        }
 
 
 class ProfileSerializer(serializers.ModelSerializer):

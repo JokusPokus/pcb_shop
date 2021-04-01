@@ -27,8 +27,13 @@ class AddressList(generics.ListCreateAPIView):
     serializer_class = AddressSerializer
 
     def get_queryset(self):
+        """Returns a list of all the current user's addresses."""
         current_user = self.request.user
-        return current_user.address_set.all()
+        return current_user.addresses.all()
+
+    def perform_create(self, serializer):
+        """Assures that a new address is saved with the calling user as owner."""
+        serializer.save(user_id=self.request.user)
 
 
 class DefaultShippingAddressDetails(generics.RetrieveAPIView):
