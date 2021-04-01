@@ -163,3 +163,53 @@ class TestUserDetailsFailure:
         response_body = response.json()
         expected_response_body = {'detail': 'Authentication credentials were not provided.'}
         assert response_body == expected_response_body
+
+
+@pytest.mark.django_db
+class TestAddressCreationSuccess:
+    pass
+
+
+@pytest.mark.django_db
+class TestAddressCreationFailure:
+    pass
+
+
+@pytest.mark.django_db
+class TestAddressListSuccess:
+    pass
+
+
+@pytest.mark.django_db
+class TestAddressListFailure:
+    pass
+
+
+@pytest.mark.django_db
+class TestAddressUpdateSuccess:
+    pass
+
+
+@pytest.mark.django_db
+class TestAddressUpdateFailure:
+    pass
+
+
+@pytest.mark.django_db
+class TestAddressDeletionSuccess:
+    pass
+
+
+@pytest.mark.django_db
+class TestAddressDeletionFailure:
+    pass
+
+
+@pytest.mark.django_db
+class TestAddressDefaultChangeSuccess:
+    pass
+
+
+@pytest.mark.django_db
+class TestAddressDefaultChangeFailure:
+    pass
