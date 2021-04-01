@@ -2,4 +2,10 @@ from django.db import models
 
 
 class Address(models.Model):
-    pass
+    """Model for users' addresses."""
+    receiver_first_name = models.CharField(max_length=30)
+    receiver_last_name = models.CharField(max_length=40)
+    street = models.CharField(max_length=40)
+    additional_line = models.CharField(max_length=40, null=True, blank=True)
+    house_number = models.CharField(max_length=8, default="9999")
+    zip_code = models.CharField(max_length=5, default="99999")
