@@ -21,3 +21,11 @@ class UserDetails(generics.RetrieveDestroyAPIView):
     def get_object(self):
         current_user_pk = self.request.user.pk
         return get_object_or_404(User, pk=current_user_pk)
+
+
+class AddressList(generics.ListCreateAPIView):
+    pass
+
+
+class AddressDetails(generics.RetrieveUpdateDestroyAPIView):
+    pass
