@@ -1,5 +1,10 @@
 from rest_framework import serializers
 from .models import User, Profile
+from .address_management import Address
+
+
+class AddressSerializer(serializers.ModelSerializer):
+    pass
 
 
 class ProfileSerializer(serializers.ModelSerializer):
