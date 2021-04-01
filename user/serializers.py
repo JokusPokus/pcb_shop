@@ -6,7 +6,7 @@ from .address_management import Address
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
-        fields = '__all__'
+        exclude = ('user', )
 
 
 class ProfileSerializer(serializers.ModelSerializer):

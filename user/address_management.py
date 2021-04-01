@@ -1,4 +1,5 @@
 from django.db import models
+from .models import User
 
 
 class Address(models.Model):
@@ -9,3 +10,6 @@ class Address(models.Model):
     additional_line = models.CharField(max_length=40, null=True, blank=True)
     house_number = models.CharField(max_length=8, default="9999")
     zip_code = models.CharField(max_length=5, default="99999")
+
+    # Each address is necessarily linked to exactly one user
+    user = models.ForeignKey(User, on_delete=models.CASCADE)

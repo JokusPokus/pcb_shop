@@ -4,7 +4,7 @@ from rest_framework import generics
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 
 from .models import User
-from .serializers import UserSerializer
+from .serializers import UserSerializer, AddressSerializer
 
 
 class UserList(generics.ListAPIView):
@@ -24,7 +24,11 @@ class UserDetails(generics.RetrieveDestroyAPIView):
 
 
 class AddressList(generics.ListCreateAPIView):
-    pass
+    serializer_class = AddressSerializer
+
+    def get_queryset(self):
+        current_user = self.request.user
+        return current_user.address_set.all()
 
 
 class AddressDetails(generics.RetrieveUpdateDestroyAPIView):
