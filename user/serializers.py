@@ -4,14 +4,16 @@ from .address_management import Address
 
 
 class AddressSerializer(serializers.ModelSerializer):
-    pass
+    class Meta:
+        model = Address
+        fields = '__all__'
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Profile
         fields = ('default_shipping_address', 'default_billing_address')
+        depth = 2
 
 
 class UserSerializer(serializers.ModelSerializer):
