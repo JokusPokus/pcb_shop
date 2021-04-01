@@ -23,13 +23,25 @@ class UserDetails(generics.RetrieveDestroyAPIView):
         return get_object_or_404(User, pk=current_user_pk)
 
 
-class AddressList(generics.ListCreateAPIView):
+class BillingAddressList(generics.ListCreateAPIView):
     serializer_class = AddressSerializer
 
     def get_queryset(self):
         current_user = self.request.user
-        return current_user.address_set.all()
+        return current_user.billing_address_set.all()
 
 
-class AddressDetails(generics.RetrieveUpdateDestroyAPIView):
+class BillingAddressDetails(generics.RetrieveUpdateDestroyAPIView):
+    pass
+
+
+class ShippingAddressList(generics.ListCreateAPIView):
+    serializer_class = AddressSerializer
+
+    def get_queryset(self):
+        current_user = self.request.user
+        return current_user.shipping_address_set.all()
+
+
+class ShippingAddressDetails(generics.RetrieveUpdateDestroyAPIView):
     pass

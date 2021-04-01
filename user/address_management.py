@@ -13,3 +13,11 @@ class Address(models.Model):
 
     # Each address is necessarily linked to exactly one user
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+
+class BillingAddress(Address):
+    pass
+
+
+class ShippingAddress(Address):
+    pass
