@@ -10,4 +10,5 @@ urlpatterns = [
     path('attributes/addresses/', views.AddressList.as_view(), name='address_list'),
     path('attributes/default-shipping-address/', views.DefaultShippingAddressDetails.as_view(), name='shipping_address'),
     path('attributes/default-billing-address/', views.DefaultBillingAddressDetails.as_view(), name='shipping_address'),
+    path('attributes/addresses/change-default/', views.change_address_default, name='change_address_default'),
 ]
