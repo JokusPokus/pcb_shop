@@ -3,6 +3,8 @@ import pytest
 from django.urls import reverse
 
 from user.models import User
+from user.address_management import Address
+from user.tests.conftest import VALID_ADDRESS
 
 
 @pytest.mark.django_db
@@ -164,12 +166,98 @@ class TestUserDetailsFailure:
 
 @pytest.mark.django_db
 class TestAddressCreationSuccess:
-    pass
+    def test_correct_http_response(self, create_address):
+        """GIVEN valid address and an authenticated user
+
+        WHEN that user tries to save the address
+
+        THEN a 201 status code and the correct address data
+        with default settings set to false is returned.
+        """
+        response = create_address
+        assert response.status_code == 201
+
+        response_body = response.json()
+        expected_response_data = VALID_ADDRESS.copy()
+        expected_response_data.update({
+            "is_shipping_default": False,
+            "is_billing_default": False
+        })
+        # Expected response data is contained in response_body
+        assert expected_response_data.items() <= response_body.items()
+
+    def test_address_inserted_into_db(self, create_address, user):
+        """GIVEN valid address data and an authenticated user
+
+        WHEN that user tries to save the address
+
+        THEN the address is inserted into the database.
+        """
+        response = create_address
+        address_id = response.json()["id"]
+        assert user.addresses.filter(id=address_id, **VALID_ADDRESS).exists()
 
 
 @pytest.mark.django_db
 class TestAddressCreationFailure:
-    pass
+    def test_correct_http_response_for_anonymous_user(self, create_address_with_anonymous_user):
+        """GIVEN valid address data and an anonymous user
+
+        WHEN that user tries to create the address
+
+        THEN a 403 status code and a rejection message is returned.
+        """
+        response = create_address_with_anonymous_user
+        assert response.status_code == 403
+
+        response_body = response.json()
+        expected_response_body = {
+            "detail": "Authentication credentials were not provided."
+        }
+        assert response_body == expected_response_body
+
+    def test_address_not_created_for_anonymous_user(
+            self,
+            create_address_with_anonymous_user
+    ):
+        """GIVEN valid address data and an anonymous user
+
+        WHEN that user tries to create the address
+
+        THEN the address is not inserted into the database.
+        """
+        assert not Address.objects.filter(**VALID_ADDRESS).exists()
+
+    def test_correct_http_response_to_incomplete_address(self, create_incomplete_address):
+        """GIVEN incomplete address data and an authenticated user
+
+        WHEN that user tries to create the address
+
+        THEN a 400 status code and the correct error message are returned.
+        """
+        missing_attribute, _, response = create_incomplete_address
+        assert response.status_code == 400
+
+        response_body = response.json()
+        expected_response_body = {
+            missing_attribute: [
+                "This field is required."
+            ]
+        }
+        assert response_body == expected_response_body
+
+    def test_incomplete_address_not_inserted_into_db(
+            self,
+            create_incomplete_address
+    ):
+        """GIVEN incomplete address data and an authenticated user
+
+        WHEN that user tries to create the address
+
+        THEN the address is not inserted into the database.
+        """
+        _, address_data, _ = create_incomplete_address
+        assert not Address.objects.filter(**address_data).exists()
 
 
 @pytest.mark.django_db

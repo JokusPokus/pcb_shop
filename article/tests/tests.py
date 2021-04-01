@@ -50,8 +50,9 @@ class TestBoardCreationSuccess:
 
         THEN the board is inserted into the database.
         """
-        create_boards_with_authenticated_user()
-        assert Board.objects.filter(**VALID_BOARD_DATA).exists()
+        response = create_boards_with_authenticated_user()
+        board_id = response.json()["id"]
+        assert Board.objects.filter(id=board_id, **VALID_BOARD_DATA).exists()
 
 
 @pytest.mark.usefixtures("create_pcb_category")

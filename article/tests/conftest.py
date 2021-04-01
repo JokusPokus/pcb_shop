@@ -41,7 +41,7 @@ def create_board_with_anonymous_user(client):
 
 @pytest.fixture(params=[key for key in VALID_BOARD_DATA])
 def create_incomplete_board(authenticated_client, request):
-    """Sends POST request to create a board where the :attr:
+    """Sends POST request to create a board where the :request.param:
     information is missing and returns the response.
     """
     board_data = VALID_BOARD_DATA.copy()
