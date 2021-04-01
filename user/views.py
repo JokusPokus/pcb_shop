@@ -1,11 +1,12 @@
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
+from django.views.decorators.http import require_GET
 
 from rest_framework import generics
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 
 from .models import User
-from .address_management import Address
+from .address_management import Address, disable_old_default, set_new_default
 from .serializers import UserSerializer, AddressSerializer
 
 
@@ -60,39 +61,22 @@ class DefaultBillingAddressDetails(generics.RetrieveUpdateDestroyAPIView):
             return current_user.addresses.first()
 
 
+@require_GET()
 def change_address_default(request):
     """Changes a user's default shipping or billing address.
     The new default is given by the address id and the type URL parameter
     specifies the address type (shipping or billing)."""
-    def disable_old_default(_type: str, _user: User):
-        try:
-            if _type == "shipping":
-                current_default = _user.addresses.get(is_shipping_default=True)
-                current_default.is_shipping_default = False
-            else:
-                current_default = _user.addresses.get(is_billing_default=True)
-                current_default.is_billing_default = False
-            current_default.save()
-        except Address.DoesNotExist:
-            pass
-
-    def set_new_default(_type: str, _user: User, _id: int):
-        new_default = current_user.addresses.get(id=_id)
-        if _type == "shipping":
-            new_default.is_shipping_default = True
-        else:
-            new_default.is_billing_default = True
-        new_default.save()
-
     new_default_address_id = request.GET.get("address_id")
     address_type = request.GET.get("type")
 
+    # Protect against malformed requests
     if new_default_address_id is None or address_type not in ["shipping", "billing"]:
         return HttpResponseBadRequest("Query params not valid. Requires address_id and type (shipping or billing).")
 
     current_user = request.user
     new_default_address_id = int(new_default_address_id)
 
+    # Make sure current user owns the new default address
     if not current_user.addresses.filter(id=new_default_address_id):
         return HttpResponseNotFound("Address does not exist for this user.")
 
