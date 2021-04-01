@@ -61,7 +61,7 @@ class DefaultBillingAddressDetails(generics.RetrieveUpdateDestroyAPIView):
             return current_user.addresses.first()
 
 
-@require_GET()
+@require_GET
 def change_address_default(request):
     """Changes a user's default shipping or billing address.
     The new default is given by the address id and the type URL parameter

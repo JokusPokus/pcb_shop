@@ -139,10 +139,7 @@ class TestUserDetailsSuccess:
         expected_response_body = {
             'email': user.email,
             'id': user.pk,
-            'profile': {
-                'default_shipping_address': user.profile.default_shipping_address,
-                'default_billing_address': user.profile.default_billing_address
-            }
+            'profile': {}
         }
         response_body = response.json()
         assert response_body == expected_response_body
