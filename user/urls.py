@@ -9,7 +9,5 @@ urlpatterns = [
     path('info/', views.UserDetails.as_view(), name='user_details'),
     path('attributes/addresses/', views.AddressList.as_view(), name='address_list'),
     path('attributes/addresses/<int:pk>/', views.AddressDetails.as_view(), name='address_details'),
-    path('attributes/default-shipping-address/', views.DefaultShippingAddressDetails.as_view(), name='shipping_address'),
-    path('attributes/default-billing-address/', views.DefaultBillingAddressDetails.as_view(), name='shipping_address'),
     path('attributes/addresses/change-default/', views.change_address_default, name='change_address_default'),
 ]

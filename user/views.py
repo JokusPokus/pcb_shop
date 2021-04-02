@@ -20,6 +20,7 @@ class UserList(generics.ListAPIView):
 
 class UserDetails(generics.RetrieveDestroyAPIView):
     """GET: Returns details for current user.
+
     DELETE: Deletes current user.
     """
     queryset = User.objects.all()
@@ -32,15 +33,30 @@ class UserDetails(generics.RetrieveDestroyAPIView):
 
 
 class AddressList(generics.ListCreateAPIView):
-    """GET: Returns list of current user's addresses.
+    """GET: Returns list of current user's addresses. If query parameters is_billing_default
+    or is_shipping_default (not both at the same time) are added with the value "true",
+    the respective default address is returned.
+
     POST: Saves new address to the database.
     """
     serializer_class = AddressSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """Returns a list of all the current user's addresses."""
+        """Return list of addresses or default shipping/billing address,
+        based on query parameters.
+        """
         current_user = self.request.user
+
+        for address_type in ["billing", "shipping"]:
+            if self.request.query_params.get(f"is{address_type.capitalize()}Default") == "true":
+
+                default_address = current_user.addresses.filter(**{f"is_{address_type}_default": True})
+                if not default_address:
+                    return JsonResponse(status=404, data={"Error": f"User has no default {address_type} address"})
+
+                return default_address
+
         return current_user.addresses.all()
 
     def perform_create(self, serializer):
@@ -50,7 +66,9 @@ class AddressList(generics.ListCreateAPIView):
 
 class AddressDetails(generics.RetrieveUpdateDestroyAPIView):
     """GET: Returns address details.
+
     PATCH: Updates existing address.
+
     DELETE: Deletes address from database.
     """
     serializer_class = AddressSerializer
@@ -60,36 +78,10 @@ class AddressDetails(generics.RetrieveUpdateDestroyAPIView):
         return Address.objects.filter(user_id=self.request.user.pk)
 
 
-class DefaultShippingAddressDetails(generics.RetrieveAPIView):
-    """GET: Returns details of current user's default shipping address."""
-    serializer_class = AddressSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_object(self):
-        current_user = self.request.user
-        try:
-            return current_user.addresses.get(is_shipping_default=True)
-        except Address.DoesNotExist:
-            return current_user.addresses.first()
-
-
-class DefaultBillingAddressDetails(generics.RetrieveAPIView):
-    """GET: Returns details of current user's default billing address."""
-    serializer_class = AddressSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_object(self):
-        current_user = self.request.user
-        try:
-            return current_user.addresses.get(is_billing_default=True)
-        except Address.DoesNotExist:
-            return current_user.addresses.first()
-
-
 @require_GET
 @login_required
 def change_address_default(request):
-    """Changes a user's default shipping or billing address.
+    """GET: Changes a user's default shipping or billing address.
     The new default is given by the address id and the type URL parameter
     specifies the address type (shipping or billing)."""
     new_default_address_id = request.GET.get("address-id")
