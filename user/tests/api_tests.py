@@ -4,7 +4,7 @@ from django.urls import reverse
 
 from user.models import User
 from user.address_management import Address
-from user.tests.conftest import VALID_ADDRESS, OTHER_VALID_ADDRESS
+from user.tests.conftest import VALID_ADDRESS, OTHER_VALID_ADDRESS, INVALID_ADDRESS_FIELDS
 
 
 @pytest.mark.django_db
@@ -267,6 +267,14 @@ class TestAddressCreationFailure:
         _, address_data, _ = create_incomplete_address
         assert not Address.objects.filter(**address_data).exists()
 
+    @pytest.mark.parametrize("invalid_fields", INVALID_ADDRESS_FIELDS)
+    def test_invalid_address_data_throws_error(self, invalid_fields, create_address):
+        invalid_address = VALID_ADDRESS.copy()
+        invalid_address.update(invalid_fields)
+        response = create_address(invalid_address)
+
+        assert response.status_code == 400
+
 
 @pytest.mark.django_db
 class TestAddressListSuccess:
@@ -280,12 +288,46 @@ class TestAddressListFailure:
 
 @pytest.mark.django_db
 class TestAddressUpdateSuccess:
-    pass
+    def test_correct_http_response_upon_success(self, create_address, update_address):
+        """GIVEN an authenticated user with an existing address
+
+        WHEN the user updates a part of that address
+
+        THEN the correct Http response is returned."""
+        create_response = create_address()
+        address_id = create_response.json()["id"]
+
+        update_response = update_address(address_id, zip_code="12345")
+        assert update_response.status_code == 200
+
+    def test_address_is_updated_in_db(self, create_address, update_address, user):
+        """GIVEN an authenticated user with an existing address
+
+        WHEN the user updates a part of that address
+
+        THEN the address is correctly updated in the database."""
+        response = create_address()
+        address_id = response.json()["id"]
+
+        UPDATED_ZIP_CODE = "12345"
+        update_address(address_id, zip_code=UPDATED_ZIP_CODE)
+        assert user.addresses.get(id=address_id).zip_code == UPDATED_ZIP_CODE
 
 
 @pytest.mark.django_db
 class TestAddressUpdateFailure:
-    pass
+    def test_updating_non_existing_address_throws_404(self, update_address):
+        ADDRESS_ID = 9999  # does not exist
+        response = update_address(ADDRESS_ID, street="Beispielstraße")
+        assert response.status_code == 404
+
+    @pytest.mark.parametrize("update_dict", INVALID_ADDRESS_FIELDS)
+    def test_updating_address_with_invalid_data_throws_error(self, update_dict, create_address, update_address):
+        create_response = create_address()
+        address_id = create_response.json()["id"]
+
+        update_response = update_address(address_id, **update_dict)
+        assert update_response.status_code == 400
 
 
 @pytest.mark.django_db
@@ -307,11 +349,11 @@ class TestAddressDefaultChangeSuccess:
         default address
 
         THEN she receives a 200 Http response with a success message."""
-        response = create_and_set_as_default(VALID_ADDRESS)
+        response = create_and_set_as_default(VALID_ADDRESS.copy())
         assert response.status_code == 200
 
         response_body = response.json()
-        assert "address changed successfully" in response_body.get("success")
+        assert "address changed successfully" in response_body.get("Success")
 
     def test_default_change_removes_old_default(self, create_and_set_as_default, user):
         """GIVEN an authenticated user with an existing default
@@ -321,7 +363,7 @@ class TestAddressDefaultChangeSuccess:
 
         THEN the default status of the old default address is removed
         in the database."""
-        create_and_set_as_default(VALID_ADDRESS)
+        create_and_set_as_default(VALID_ADDRESS.copy())
         create_and_set_as_default(OTHER_VALID_ADDRESS)
         old_default = user.addresses.get(**VALID_ADDRESS)
         assert not old_default.is_shipping_default
@@ -356,10 +398,8 @@ class TestAddressDefaultChangeFailure:
         response_body = response.json()
         assert response_body.get("Error") == "Address does not exist for this user."
 
-    @pytest.mark.parametrize("address_type", [("shipping",), ("billing",)])
     def test_bad_address_id_does_not_affect_current_default(
             self,
-            address_type,
             create_and_set_as_default,
             authenticated_client,
             user
@@ -374,8 +414,9 @@ class TestAddressDefaultChangeFailure:
 
         # Change default to non existing address
         ADDRESS_ID = 9999
-        path = reverse("user:change_address_default") + f"?address_id={ADDRESS_ID}&type={address_type}"
-        authenticated_client.get(path=path)
+        for address_type in ["billing", "shipping"]:
+            path = reverse("user:change_address_default") + f"?address_id={ADDRESS_ID}&type={address_type}"
+            authenticated_client.get(path=path)
 
         expected_default_address = user.addresses.get(**VALID_ADDRESS)
         assert expected_default_address.is_shipping_default or expected_default_address.is_billing_default

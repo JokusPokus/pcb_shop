@@ -19,6 +19,13 @@ OTHER_VALID_ADDRESS = {
     "zip_code": "88888"
 }
 
+INVALID_ADDRESS_FIELDS = [
+    (pytest.param({"zip_code": "1234"}, id="Zip too short")),
+    (pytest.param({"zip_code": "123456"}, id="Zip too long")),
+    (pytest.param({"receiver_first_name": "a" * 100}, id="Name too long")),
+    (pytest.param({"house_number": "1000000 c"}, id="House number too long"))
+]
+
 
 @pytest.fixture
 def valid_credentials():
@@ -31,15 +38,17 @@ def valid_credentials():
 
 @pytest.fixture
 def create_address(authenticated_client):
-    def _create_address(address_data=VALID_ADDRESS):
+    def _create_address(address_data=None):
         """Closure to create address with given address data."""
+        if address_data is None:
+            address_data = VALID_ADDRESS.copy()
         response = authenticated_client.post(path=reverse("user:address_list"), data=address_data)
         return response
     return _create_address
 
 
 @pytest.fixture
-def create_address_with_anonymous_user(client):
+def create_address_with_anonymous_user(db, client):
     response = client.post(path=reverse("user:address_list"), data=VALID_ADDRESS)
     return response
 
@@ -62,7 +71,7 @@ def create_and_set_as_default(request, create_address, authenticated_client):
         create_response = create_address(address_data)
 
         address_id = create_response.json()["id"]
-        path = reverse("user:change_address_default") + f"?address_id={address_id}&type={request.param}"
+        path = reverse("user:change_address_default") + f"?address-id={address_id}&type={request.param}"
         response = authenticated_client.get(path=path)
         return response
     return _create_and_set_as_default
@@ -71,6 +80,37 @@ def create_and_set_as_default(request, create_address, authenticated_client):
 @pytest.fixture(params=["shipping", "billing"])
 def set_non_existing_address_as_default(request, authenticated_client):
     ADDRESS_ID = 9999
-    path = reverse("user:change_address_default") + f"?address_id={ADDRESS_ID}&type={request.param}"
+    path = reverse("user:change_address_default") + f"?address-id={ADDRESS_ID}&type={request.param}"
     response = authenticated_client.get(path=path)
+    return response
+
+
+@pytest.fixture
+def update_address(create_address, authenticated_client):
+    def _update_address(address_id: int, address=None, **kwargs):
+        """Closure to creates a new address for authenticated user, the updates that address."""
+        if address is None:
+            address = VALID_ADDRESS.copy()
+        address.update(kwargs)
+
+        # Use API to update address
+        response = authenticated_client.patch(
+            path=reverse("user:address_details", args=[address_id]),
+            data=address,
+            content_type='application/json'
+        )
+        return response
+    return _update_address
+
+
+def create_address_and_update_with_invalid_field(authenticated_client, updated_address):
+    response = create_address()
+    address_id = response.json()["id"]
+    updated_address["invalid_field"] = ""
+
+    response = authenticated_client.patch(
+        path=reverse("user:address_details", args=[ADDRESS_ID]),
+        data=updated_address,
+        content_type='application/json'
+    )
     return response

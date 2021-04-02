@@ -39,6 +39,13 @@ class AddressList(generics.ListCreateAPIView):
         serializer.save(user_id=self.request.user)
 
 
+class AddressDetails(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = AddressSerializer
+
+    def get_queryset(self):
+        return Address.objects.filter(user_id=self.request.user.pk)
+
+
 class DefaultShippingAddressDetails(generics.RetrieveAPIView):
     serializer_class = AddressSerializer
 
@@ -50,7 +57,7 @@ class DefaultShippingAddressDetails(generics.RetrieveAPIView):
             return current_user.addresses.first()
 
 
-class DefaultBillingAddressDetails(generics.RetrieveUpdateDestroyAPIView):
+class DefaultBillingAddressDetails(generics.RetrieveAPIView):
     serializer_class = AddressSerializer
 
     def get_object(self):
@@ -66,12 +73,12 @@ def change_address_default(request):
     """Changes a user's default shipping or billing address.
     The new default is given by the address id and the type URL parameter
     specifies the address type (shipping or billing)."""
-    new_default_address_id = request.GET.get("address_id")
+    new_default_address_id = request.GET.get("address-id")
     address_type = request.GET.get("type")
 
     # Protect against malformed requests
     if new_default_address_id is None or address_type not in ["shipping", "billing"]:
-        response_body = {"Error": "Query params not valid. Requires address_id and type (shipping or billing)."}
+        response_body = {"Error": "Query params not valid. Requires address-id and type (shipping or billing)."}
         return JsonResponse(status=400, data=response_body)
 
     current_user = request.user
@@ -84,7 +91,7 @@ def change_address_default(request):
 
     disable_old_default(address_type, current_user)
     set_new_default(address_type, current_user, new_default_address_id)
-    response_body = {"success": f"Default {address_type} address changed successfully"}
+    response_body = {"Success": f"Default {address_type} address changed successfully"}
     return JsonResponse(response_body)
 
 
