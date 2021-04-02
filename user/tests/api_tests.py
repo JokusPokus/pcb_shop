@@ -214,14 +214,14 @@ class TestAddressCreationSuccess:
 
 @pytest.mark.django_db
 class TestAddressCreationFailure:
-    def test_correct_http_response_for_anonymous_user(self, create_address_with_anonymous_user):
+    def test_correct_http_response_for_anonymous_user(self, create_address):
         """GIVEN valid address data and an anonymous user
 
         WHEN that user tries to create the address
 
         THEN a 403 status code and a rejection message is returned.
         """
-        response = create_address_with_anonymous_user
+        response = create_address(VALID_ADDRESS, anonymous=True)
         assert response.status_code == 403
 
         response_body = response.json()
@@ -230,23 +230,29 @@ class TestAddressCreationFailure:
         }
         assert response_body == expected_response_body
 
-    def test_address_not_created_for_anonymous_user(self, create_address_with_anonymous_user):
+    def test_address_not_created_for_anonymous_user(self, create_address):
         """GIVEN valid address data and an anonymous user
 
         WHEN that user tries to create the address
 
         THEN the address is not inserted into the database.
         """
+        create_address(VALID_ADDRESS, anonymous=True)
         assert not Address.objects.filter(**VALID_ADDRESS).exists()
 
-    def test_correct_http_response_to_incomplete_address(self, create_incomplete_address):
+    @pytest.mark.parametrize("missing_attribute", [attribute for attribute in VALID_ADDRESS])
+    def test_correct_http_response_to_incomplete_address(self, missing_attribute, create_address):
         """GIVEN incomplete address data and an authenticated user
 
         WHEN that user tries to create the address
 
         THEN a 400 status code and the correct error message are returned.
         """
-        missing_attribute, _, response = create_incomplete_address
+        address_data = VALID_ADDRESS.copy()
+        del address_data[missing_attribute]
+
+        response = create_address(address_data)
+
         assert response.status_code == 400
 
         response_body = response.json()
@@ -257,14 +263,17 @@ class TestAddressCreationFailure:
         }
         assert response_body == expected_response_body
 
-    def test_incomplete_address_not_inserted_into_db(self, create_incomplete_address):
+    @pytest.mark.parametrize("missing_attribute", [attribute for attribute in VALID_ADDRESS])
+    def test_incomplete_address_not_inserted_into_db(self, missing_attribute, create_address):
         """GIVEN incomplete address data and an authenticated user
 
         WHEN that user tries to create the address
 
         THEN the address is not inserted into the database.
         """
-        _, address_data, _ = create_incomplete_address
+        address_data = VALID_ADDRESS.copy()
+        del address_data[missing_attribute]
+        create_address(address_data)
         assert not Address.objects.filter(**address_data).exists()
 
     @pytest.mark.parametrize("invalid_fields", INVALID_ADDRESS_FIELDS)
@@ -342,14 +351,17 @@ class TestAddressDeletionFailure:
 
 @pytest.mark.django_db
 class TestAddressDefaultChangeSuccess:
-    def test_correct_http_response(self, create_and_set_as_default):
+    def test_correct_http_response(self, create_address, set_as_default):
         """GIVEN an authenticated user with an existing address
 
         WHEN the user sets that address as the new shipping or billing
         default address
 
         THEN she receives a 200 Http response with a success message."""
-        response = create_and_set_as_default(VALID_ADDRESS.copy())
+        create_response = create_address()
+        address_id = create_response.json()["id"]
+
+        response = set_as_default(address_id)
         assert response.status_code == 200
 
         response_body = response.json()
@@ -363,8 +375,9 @@ class TestAddressDefaultChangeSuccess:
 
         THEN the default status of the old default address is removed
         in the database."""
-        create_and_set_as_default(VALID_ADDRESS.copy())
+        create_and_set_as_default(VALID_ADDRESS)
         create_and_set_as_default(OTHER_VALID_ADDRESS)
+
         old_default = user.addresses.get(**VALID_ADDRESS)
         assert not old_default.is_shipping_default
         assert not old_default.is_billing_default
@@ -379,6 +392,7 @@ class TestAddressDefaultChangeSuccess:
         in the database."""
         create_and_set_as_default(VALID_ADDRESS)
         create_and_set_as_default(OTHER_VALID_ADDRESS)
+
         new_default = user.addresses.get(**OTHER_VALID_ADDRESS)
         assert new_default.is_shipping_default or new_default.is_billing_default
 
