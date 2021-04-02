@@ -66,3 +66,11 @@ def create_and_set_as_default(request, create_address, authenticated_client):
         response = authenticated_client.get(path=path)
         return response
     return _create_and_set_as_default
+
+
+@pytest.fixture(params=["shipping", "billing"])
+def set_non_existing_address_as_default(request, authenticated_client):
+    ADDRESS_ID = 9999
+    path = reverse("user:change_address_default") + f"?address_id={ADDRESS_ID}&type={request.param}"
+    response = authenticated_client.get(path=path)
+    return response

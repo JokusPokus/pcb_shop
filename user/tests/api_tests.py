@@ -230,10 +230,7 @@ class TestAddressCreationFailure:
         }
         assert response_body == expected_response_body
 
-    def test_address_not_created_for_anonymous_user(
-            self,
-            create_address_with_anonymous_user
-    ):
+    def test_address_not_created_for_anonymous_user(self, create_address_with_anonymous_user):
         """GIVEN valid address data and an anonymous user
 
         WHEN that user tries to create the address
@@ -260,10 +257,7 @@ class TestAddressCreationFailure:
         }
         assert response_body == expected_response_body
 
-    def test_incomplete_address_not_inserted_into_db(
-            self,
-            create_incomplete_address
-    ):
+    def test_incomplete_address_not_inserted_into_db(self, create_incomplete_address):
         """GIVEN incomplete address data and an authenticated user
 
         WHEN that user tries to create the address
@@ -317,7 +311,7 @@ class TestAddressDefaultChangeSuccess:
         assert response.status_code == 200
 
         response_body = response.json()
-        assert "address changed successfully" in response_body
+        assert "address changed successfully" in response_body.get("success")
 
     def test_default_change_removes_old_default(self, create_and_set_as_default, user):
         """GIVEN an authenticated user with an existing default
@@ -349,4 +343,18 @@ class TestAddressDefaultChangeSuccess:
 
 @pytest.mark.django_db
 class TestAddressDefaultChangeFailure:
-    pass
+    def test_non_existing_address_as_default_throws_404(self, set_non_existing_address_as_default):
+        """GIVEN an authenticated user
+
+        WHEN the user tries to set an address that he does not own
+        or that does not exist as her new shipping or billing default address
+
+        THEN the correct error is thrown."""
+        response = set_non_existing_address_as_default
+        assert response.status_code == 404
+
+        response_body = response.json()
+        assert response_body.get("Error") == "Address does not exist for this user."
+
+    def test_bad_address_id_does_not_affect_current_default(self, set_non_existing_address_as_default):
+        pass
