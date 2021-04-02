@@ -11,6 +11,14 @@ VALID_ADDRESS = {
     "zip_code": "99999"
 }
 
+OTHER_VALID_ADDRESS = {
+    "receiver_first_name": "Maxime",
+    "receiver_last_name": "Musterfrau",
+    "street": "Musterstraße",
+    "house_number": "88",
+    "zip_code": "88888"
+}
+
 
 @pytest.fixture
 def valid_credentials():
@@ -23,8 +31,11 @@ def valid_credentials():
 
 @pytest.fixture
 def create_address(authenticated_client):
-    response = authenticated_client.post(path=reverse("user:address_list"), data=VALID_ADDRESS)
-    return response
+    def _create_address(address_data=VALID_ADDRESS):
+        """Closure to create address with given address data."""
+        response = authenticated_client.post(path=reverse("user:address_list"), data=address_data)
+        return response
+    return _create_address
 
 
 @pytest.fixture
@@ -42,3 +53,16 @@ def create_incomplete_address(authenticated_client, request):
     del address_data[request.param]
     _response = authenticated_client.post(path=reverse("user:address_list"), data=address_data)
     return request.param, address_data, _response
+
+
+@pytest.fixture(params=["shipping", "billing"])
+def create_and_set_as_default(request, create_address, authenticated_client):
+    def _create_and_set_as_default(address_data):
+        """Closure to create address and then set it as default shipping or billing address."""
+        create_response = create_address(address_data)
+
+        address_id = create_response.json()["id"]
+        path = reverse("user:change_address_default") + f"?address_id={address_id}&type={request.param}"
+        response = authenticated_client.get(path=path)
+        return response
+    return _create_and_set_as_default

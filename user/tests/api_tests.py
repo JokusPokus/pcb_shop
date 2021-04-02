@@ -4,7 +4,7 @@ from django.urls import reverse
 
 from user.models import User
 from user.address_management import Address
-from user.tests.conftest import VALID_ADDRESS
+from user.tests.conftest import VALID_ADDRESS, OTHER_VALID_ADDRESS
 
 
 @pytest.mark.django_db
@@ -174,7 +174,7 @@ class TestAddressCreationSuccess:
         THEN a 201 status code and the correct address data
         with default settings set to false is returned.
         """
-        response = create_address
+        response = create_address()
         assert response.status_code == 201
 
         response_body = response.json()
@@ -193,9 +193,23 @@ class TestAddressCreationSuccess:
 
         THEN the address is inserted into the database.
         """
-        response = create_address
+        response = create_address()
         address_id = response.json()["id"]
         assert user.addresses.filter(id=address_id, **VALID_ADDRESS).exists()
+
+    def test_address_is_not_set_to_default(self, create_address, user):
+        """GIVEN valid address data and an authenticated user
+
+        WHEN that address is saved into the database
+
+        THEN the address is not set to be a shipping or billing
+        default.
+        """
+        response = create_address()
+        address_id = response.json()["id"]
+        new_address = user.addresses.get(id=address_id)
+        assert not new_address.is_shipping_default
+        assert not new_address.is_billing_default
 
 
 @pytest.mark.django_db
@@ -292,7 +306,45 @@ class TestAddressDeletionFailure:
 
 @pytest.mark.django_db
 class TestAddressDefaultChangeSuccess:
-    pass
+    def test_correct_http_response(self, create_and_set_as_default):
+        """GIVEN an authenticated user with an existing address
+
+        WHEN the user sets that address as the new shipping or billing
+        default address
+
+        THEN she receives a 200 Http response with a success message."""
+        response = create_and_set_as_default(VALID_ADDRESS)
+        assert response.status_code == 200
+
+        response_body = response.json()
+        assert "address changed successfully" in response_body
+
+    def test_default_change_removes_old_default(self, create_and_set_as_default, user):
+        """GIVEN an authenticated user with an existing default
+        shipping or billing address
+
+        WHEN the user sets a new shipping or billing default address
+
+        THEN the default status of the old default address is removed
+        in the database."""
+        create_and_set_as_default(VALID_ADDRESS)
+        create_and_set_as_default(OTHER_VALID_ADDRESS)
+        old_default = user.addresses.get(**VALID_ADDRESS)
+        assert not old_default.is_shipping_default
+        assert not old_default.is_billing_default
+
+    def test_default_change_adds_new_default(self, create_and_set_as_default, user):
+        """GIVEN an authenticated user with an existing default
+        shipping or billing address
+
+        WHEN the user sets a new shipping or billing default address
+
+        THEN the default status of the new default address is set
+        in the database."""
+        create_and_set_as_default(VALID_ADDRESS)
+        create_and_set_as_default(OTHER_VALID_ADDRESS)
+        new_default = user.addresses.get(**OTHER_VALID_ADDRESS)
+        assert new_default.is_shipping_default or new_default.is_billing_default
 
 
 @pytest.mark.django_db

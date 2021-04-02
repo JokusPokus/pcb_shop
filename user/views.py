@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
+from django.http import JsonResponse
 from django.views.decorators.http import require_GET
 
 from rest_framework import generics
@@ -71,19 +71,21 @@ def change_address_default(request):
 
     # Protect against malformed requests
     if new_default_address_id is None or address_type not in ["shipping", "billing"]:
-        return HttpResponseBadRequest("Query params not valid. Requires address_id and type (shipping or billing).")
+        response_body = {"Error": "Query params not valid. Requires address_id and type (shipping or billing)."}
+        return JsonResponse(status=400, data=response_body)
 
     current_user = request.user
     new_default_address_id = int(new_default_address_id)
 
     # Make sure current user owns the new default address
     if not current_user.addresses.filter(id=new_default_address_id):
-        return HttpResponseNotFound("Address does not exist for this user.")
+        response_body = {"Error": "Address does not exist for this user."}
+        return JsonResponse(status=404, data=response_body)
 
     disable_old_default(address_type, current_user)
     set_new_default(address_type, current_user, new_default_address_id)
-
-    return HttpResponse(f"Default {address_type} address changed successfully", status=200)
+    response_body = {"success": f"Default {address_type} address changed successfully"}
+    return JsonResponse(response_body)
 
 
 

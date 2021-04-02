@@ -39,7 +39,7 @@ def set_new_default(_type: str, _user: User, _id: int):
     The _type parameter distinguishes billing and shipping addresses.
     The _id parameter refers to an existing address.
     """
-    new_default = current_user.addresses.get(id=_id)
+    new_default = _user.addresses.get(id=_id)
     if _type == "shipping":
         new_default.is_shipping_default = True
     else:
