@@ -1,5 +1,5 @@
 import pytest
-from typing import Dict, Optional
+from typing import Dict, Optional, Callable
 from django.shortcuts import reverse
 
 
@@ -28,7 +28,8 @@ INVALID_ADDRESS_FIELDS = [
 
 
 @pytest.fixture
-def valid_credentials():
+def valid_credentials() -> Dict:
+    """Returns an example of valid user registration credentials"""
     return {
         "email": "charly@gmail.com",
         "password1": "SuperStrongPassword",
@@ -37,7 +38,7 @@ def valid_credentials():
 
 
 @pytest.fixture
-def create_address(client, user):
+def create_address(client, user) -> Callable:
     def _create_address(address_data: Optional[Dict] = None, anonymous: bool = False):
         """Closure to create address with given address data."""
         if address_data is None:
@@ -51,36 +52,32 @@ def create_address(client, user):
     return _create_address
 
 
-@pytest.fixture(params=["shipping", "billing"])
-def set_as_default(request, authenticated_client):
-    def _set_as_default(address_id):
-        """Closure to create address and then set it as default shipping or billing address."""
-        path = reverse("user:change_address_default") + f"?address-id={address_id}&type={request.param}"
+@pytest.fixture
+def set_as_default(authenticated_client) -> Callable:
+    def _set_as_default(address_type: str, address_id: int):
+        """Closure to set address as default shipping or billing address."""
+        path = reverse("user:change_address_default") + f"?address-id={address_id}&type={address_type}"
         response = authenticated_client.get(path=path)
         return response
     return _set_as_default
 
 
 @pytest.fixture
-def create_and_set_as_default(create_address, set_as_default):
-    def _create_and_set_as_default(address_data: dict = VALID_ADDRESS):
+def create_and_set_as_default(create_address, set_as_default) -> Callable:
+    def _create_and_set_as_default(address_type: str, address_data: Optional[Dict] = None):
+        """Closure for convenient address creation and default setting."""
+        if address_data is None:
+            address_data = VALID_ADDRESS
+
         response = create_address(address_data)
         address_id = response.json()["id"]
 
-        set_as_default(address_id)
+        set_as_default(address_type, address_id)
     return _create_and_set_as_default
 
 
-@pytest.fixture(params=["shipping", "billing"])
-def set_non_existing_address_as_default(request, authenticated_client):
-    ADDRESS_ID = 9999
-    path = reverse("user:change_address_default") + f"?address-id={ADDRESS_ID}&type={request.param}"
-    response = authenticated_client.get(path=path)
-    return response
-
-
 @pytest.fixture
-def update_address(create_address, authenticated_client):
+def update_address(create_address, authenticated_client) -> Callable:
     def _update_address(address_id: int, address=None, **kwargs):
         """Closure to creates a new address for authenticated user, the updates that address."""
         if address is None:
@@ -95,16 +92,3 @@ def update_address(create_address, authenticated_client):
         )
         return response
     return _update_address
-
-
-def create_address_and_update_with_invalid_field(authenticated_client, updated_address):
-    response = create_address()
-    address_id = response.json()["id"]
-    updated_address["invalid_field"] = ""
-
-    response = authenticated_client.patch(
-        path=reverse("user:address_details", args=[ADDRESS_ID]),
-        data=updated_address,
-        content_type='application/json'
-    )
-    return response

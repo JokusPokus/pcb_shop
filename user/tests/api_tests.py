@@ -351,7 +351,8 @@ class TestAddressDeletionFailure:
 
 @pytest.mark.django_db
 class TestAddressDefaultChangeSuccess:
-    def test_correct_http_response(self, create_address, set_as_default):
+    @pytest.mark.parametrize("address_type", ["shipping", "billing"])
+    def test_correct_http_response(self, address_type, create_address, set_as_default):
         """GIVEN an authenticated user with an existing address
 
         WHEN the user sets that address as the new shipping or billing
@@ -361,13 +362,14 @@ class TestAddressDefaultChangeSuccess:
         create_response = create_address()
         address_id = create_response.json()["id"]
 
-        response = set_as_default(address_id)
+        response = set_as_default(address_type, address_id)
         assert response.status_code == 200
 
         response_body = response.json()
-        assert "address changed successfully" in response_body.get("Success")
+        assert response_body.get("Success") == f"Default {address_type} address changed successfully"
 
-    def test_default_change_removes_old_default(self, create_and_set_as_default, user):
+    @pytest.mark.parametrize("address_type", ["shipping", "billing"])
+    def test_default_change_removes_old_default(self, address_type, create_and_set_as_default, user):
         """GIVEN an authenticated user with an existing default
         shipping or billing address
 
@@ -375,14 +377,14 @@ class TestAddressDefaultChangeSuccess:
 
         THEN the default status of the old default address is removed
         in the database."""
-        create_and_set_as_default(VALID_ADDRESS)
-        create_and_set_as_default(OTHER_VALID_ADDRESS)
+        create_and_set_as_default(address_type, VALID_ADDRESS)
+        create_and_set_as_default(address_type, OTHER_VALID_ADDRESS)
 
         old_default = user.addresses.get(**VALID_ADDRESS)
-        assert not old_default.is_shipping_default
-        assert not old_default.is_billing_default
+        assert not getattr(old_default, f"is_{address_type}_default")
 
-    def test_default_change_adds_new_default(self, create_and_set_as_default, user):
+    @pytest.mark.parametrize("address_type", ["shipping", "billing"])
+    def test_default_change_adds_new_default(self, address_type, create_and_set_as_default, user):
         """GIVEN an authenticated user with an existing default
         shipping or billing address
 
@@ -390,16 +392,17 @@ class TestAddressDefaultChangeSuccess:
 
         THEN the default status of the new default address is set
         in the database."""
-        create_and_set_as_default(VALID_ADDRESS)
-        create_and_set_as_default(OTHER_VALID_ADDRESS)
+        create_and_set_as_default(address_type, VALID_ADDRESS)
+        create_and_set_as_default(address_type, OTHER_VALID_ADDRESS)
 
         new_default = user.addresses.get(**OTHER_VALID_ADDRESS)
-        assert new_default.is_shipping_default or new_default.is_billing_default
+        assert getattr(new_default, f"is_{address_type}_default")
 
 
 @pytest.mark.django_db
 class TestAddressDefaultChangeFailure:
-    def test_non_existing_address_as_default_throws_404(self, set_as_default):
+    @pytest.mark.parametrize("address_type", ["shipping", "billing"])
+    def test_non_existing_address_as_default_throws_404(self, address_type, set_as_default):
         """GIVEN an authenticated user
 
         WHEN the user tries to set an address that does not exist
@@ -407,13 +410,21 @@ class TestAddressDefaultChangeFailure:
 
         THEN the correct error is thrown."""
         ADDRESS_ID = 9999  # does not exist
-        response = set_as_default(ADDRESS_ID)
+        response = set_as_default(address_type, ADDRESS_ID)
         assert response.status_code == 404
 
         response_body = response.json()
         assert response_body.get("Error") == "Address does not exist for this user."
 
-    def test_address_id_not_owned_by_user_throws_404(self, client, other_user, create_address, set_as_default):
+    @pytest.mark.parametrize("address_type", ["shipping", "billing"])
+    def test_address_id_not_owned_by_user_throws_404(
+            self,
+            address_type,
+            client,
+            other_user,
+            create_address,
+            set_as_default
+    ):
         """GIVEN an authenticated user
 
         WHEN the user tries to set an address owned by a different user
@@ -428,13 +439,15 @@ class TestAddressDefaultChangeFailure:
         client.logout()
         client.force_login(other_user)
 
-        response = set_as_default(address_id)
+        response = set_as_default(address_type, address_id)
         assert response.status_code == 404
 
+    @pytest.mark.parametrize("address_type", ["shipping", "billing"])
     def test_bad_address_id_does_not_affect_current_default(
             self,
+            address_type,
             create_and_set_as_default,
-            authenticated_client,
+            set_as_default,
             user
     ):
         """GIVEN an authenticated user
@@ -443,13 +456,12 @@ class TestAddressDefaultChangeFailure:
         or that does not exist as her new shipping or billing default address
 
         THEN this does not affect the current default address."""
-        create_and_set_as_default(VALID_ADDRESS)
+        create_and_set_as_default(address_type, VALID_ADDRESS)
 
-        # Change default to non existing address
+        # Try to change default to non existing address
         ADDRESS_ID = 9999
-        for address_type in ["billing", "shipping"]:
-            path = reverse("user:change_address_default") + f"?address_id={ADDRESS_ID}&type={address_type}"
-            authenticated_client.get(path=path)
+        set_as_default(address_type, ADDRESS_ID)
 
+        # First address should still be the default
         expected_default_address = user.addresses.get(**VALID_ADDRESS)
-        assert expected_default_address.is_shipping_default or expected_default_address.is_billing_default
+        assert getattr(expected_default_address, f"is_{address_type}_default")
