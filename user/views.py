@@ -12,15 +12,19 @@ from .serializers import UserSerializer, AddressSerializer
 
 
 class UserList(generics.ListAPIView):
+    """GET: Lists all registered users."""
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAdminUser]
 
 
 class UserDetails(generics.RetrieveDestroyAPIView):
+    """GET: Returns details for current user.
+    DELETE: Deletes current user.
+    """
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAdminUser | IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def get_object(self):
         current_user_pk = self.request.user.pk
@@ -28,6 +32,9 @@ class UserDetails(generics.RetrieveDestroyAPIView):
 
 
 class AddressList(generics.ListCreateAPIView):
+    """GET: Returns list of current user's addresses.
+    POST: Saves new address to the database.
+    """
     serializer_class = AddressSerializer
     permission_classes = [IsAuthenticated]
 
@@ -42,6 +49,10 @@ class AddressList(generics.ListCreateAPIView):
 
 
 class AddressDetails(generics.RetrieveUpdateDestroyAPIView):
+    """GET: Returns address details.
+    PATCH: Updates existing address.
+    DELETE: Deletes address from database.
+    """
     serializer_class = AddressSerializer
     permission_classes = [IsAuthenticated]
 
@@ -50,6 +61,7 @@ class AddressDetails(generics.RetrieveUpdateDestroyAPIView):
 
 
 class DefaultShippingAddressDetails(generics.RetrieveAPIView):
+    """GET: Returns details of current user's default shipping address."""
     serializer_class = AddressSerializer
     permission_classes = [IsAuthenticated]
 
@@ -62,6 +74,7 @@ class DefaultShippingAddressDetails(generics.RetrieveAPIView):
 
 
 class DefaultBillingAddressDetails(generics.RetrieveAPIView):
+    """GET: Returns details of current user's default billing address."""
     serializer_class = AddressSerializer
     permission_classes = [IsAuthenticated]
 
