@@ -399,18 +399,37 @@ class TestAddressDefaultChangeSuccess:
 
 @pytest.mark.django_db
 class TestAddressDefaultChangeFailure:
-    def test_non_existing_address_as_default_throws_404(self, set_non_existing_address_as_default):
+    def test_non_existing_address_as_default_throws_404(self, set_as_default):
         """GIVEN an authenticated user
 
-        WHEN the user tries to set an address that he does not own
-        or that does not exist as her new shipping or billing default address
+        WHEN the user tries to set an address that does not exist
+        as her new shipping or billing default address
 
         THEN the correct error is thrown."""
-        response = set_non_existing_address_as_default
+        ADDRESS_ID = 9999  # does not exist
+        response = set_as_default(ADDRESS_ID)
         assert response.status_code == 404
 
         response_body = response.json()
         assert response_body.get("Error") == "Address does not exist for this user."
+
+    def test_address_id_not_owned_by_user_throws_404(self, client, other_user, create_address, set_as_default):
+        """GIVEN an authenticated user
+
+        WHEN the user tries to set an address owned by a different user
+        as her new shipping or billing default address
+
+        THEN the correct error is thrown."""
+        # First user creates address
+        create_response = create_address(VALID_ADDRESS)
+        address_id = create_response.json()["id"]
+
+        # Different user tries to set that address as default
+        client.logout()
+        client.force_login(other_user)
+
+        response = set_as_default(address_id)
+        assert response.status_code == 404
 
     def test_bad_address_id_does_not_affect_current_default(
             self,
