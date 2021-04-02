@@ -278,6 +278,12 @@ class TestAddressCreationFailure:
 
     @pytest.mark.parametrize("invalid_fields", INVALID_ADDRESS_FIELDS)
     def test_invalid_address_data_throws_error(self, invalid_fields, create_address):
+        """GIVEN an authenticated user
+
+        WHEN that user tries to create an address with (partially) invalid data
+
+        THEN the correct Http error is returned.
+        """
         invalid_address = VALID_ADDRESS.copy()
         invalid_address.update(invalid_fields)
         response = create_address(invalid_address)
@@ -302,7 +308,8 @@ class TestAddressUpdateSuccess:
 
         WHEN the user updates a part of that address
 
-        THEN the correct Http response is returned."""
+        THEN the correct Http response is returned.
+        """
         create_response = create_address()
         address_id = create_response.json()["id"]
 
@@ -314,7 +321,8 @@ class TestAddressUpdateSuccess:
 
         WHEN the user updates a part of that address
 
-        THEN the address is correctly updated in the database."""
+        THEN the address is correctly updated in the database.
+        """
         response = create_address()
         address_id = response.json()["id"]
 
@@ -326,12 +334,24 @@ class TestAddressUpdateSuccess:
 @pytest.mark.django_db
 class TestAddressUpdateFailure:
     def test_updating_non_existing_address_throws_404(self, update_address):
+        """GIVEN an authenticated user
+
+        WHEN the user tries to update a non-existing address
+
+        THEN the correct Http error code is returned.
+        """
         ADDRESS_ID = 9999  # does not exist
         response = update_address(ADDRESS_ID, street="Beispielstraße")
         assert response.status_code == 404
 
     @pytest.mark.parametrize("update_dict", INVALID_ADDRESS_FIELDS)
     def test_updating_address_with_invalid_data_throws_error(self, update_dict, create_address, update_address):
+        """GIVEN an authenticated user
+
+        WHEN the user tries to update an existing address with invalid data
+
+        THEN the correct Http error code is returned.
+        """
         create_response = create_address()
         address_id = create_response.json()["id"]
 
