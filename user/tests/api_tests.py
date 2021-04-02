@@ -356,5 +356,26 @@ class TestAddressDefaultChangeFailure:
         response_body = response.json()
         assert response_body.get("Error") == "Address does not exist for this user."
 
-    def test_bad_address_id_does_not_affect_current_default(self, set_non_existing_address_as_default):
-        pass
+    @pytest.mark.parametrize("address_type", [("shipping",), ("billing",)])
+    def test_bad_address_id_does_not_affect_current_default(
+            self,
+            address_type,
+            create_and_set_as_default,
+            authenticated_client,
+            user
+    ):
+        """GIVEN an authenticated user
+
+        WHEN the user tries to set an address that he does not own
+        or that does not exist as her new shipping or billing default address
+
+        THEN this does not affect the current default address."""
+        create_and_set_as_default(VALID_ADDRESS)
+
+        # Change default to non existing address
+        ADDRESS_ID = 9999
+        path = reverse("user:change_address_default") + f"?address_id={ADDRESS_ID}&type={address_type}"
+        authenticated_client.get(path=path)
+
+        expected_default_address = user.addresses.get(**VALID_ADDRESS)
+        assert expected_default_address.is_shipping_default or expected_default_address.is_billing_default
