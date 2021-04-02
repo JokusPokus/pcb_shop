@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET
+from django.contrib.auth.decorators import login_required
 
 from rest_framework import generics
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -28,6 +29,7 @@ class UserDetails(generics.RetrieveDestroyAPIView):
 
 class AddressList(generics.ListCreateAPIView):
     serializer_class = AddressSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         """Returns a list of all the current user's addresses."""
@@ -41,6 +43,7 @@ class AddressList(generics.ListCreateAPIView):
 
 class AddressDetails(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = AddressSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return Address.objects.filter(user_id=self.request.user.pk)
@@ -48,6 +51,7 @@ class AddressDetails(generics.RetrieveUpdateDestroyAPIView):
 
 class DefaultShippingAddressDetails(generics.RetrieveAPIView):
     serializer_class = AddressSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_object(self):
         current_user = self.request.user
@@ -59,6 +63,7 @@ class DefaultShippingAddressDetails(generics.RetrieveAPIView):
 
 class DefaultBillingAddressDetails(generics.RetrieveAPIView):
     serializer_class = AddressSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_object(self):
         current_user = self.request.user
@@ -69,6 +74,7 @@ class DefaultBillingAddressDetails(generics.RetrieveAPIView):
 
 
 @require_GET
+@login_required
 def change_address_default(request):
     """Changes a user's default shipping or billing address.
     The new default is given by the address id and the type URL parameter
