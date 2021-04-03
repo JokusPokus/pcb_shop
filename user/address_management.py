@@ -1,6 +1,10 @@
 from django.db import models
+from django.core.validators import MinLengthValidator
+
 from .models import User
 
+
+# ADDRESS MODEL
 
 class Address(models.Model):
     """Model for users' addresses."""
@@ -9,7 +13,7 @@ class Address(models.Model):
     address_extension = models.CharField(max_length=40, null=True, blank=True)
     street = models.CharField(max_length=40)
     house_number = models.CharField(max_length=8)
-    zip_code = models.CharField(max_length=5)
+    zip_code = models.CharField(max_length=5, validators=[MinLengthValidator(5)])
 
     # Each address is necessarily linked to exactly one user
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name="addresses", default=1)
@@ -17,6 +21,8 @@ class Address(models.Model):
     is_shipping_default = models.BooleanField(default=False)
     is_billing_default = models.BooleanField(default=False)
 
+
+# UTILITY FUNCTIONS FOR ADDRESS API
 
 def disable_old_default(_type: str, _user: User):
     """Utility to disable default status of a user's current default address.

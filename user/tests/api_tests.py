@@ -149,8 +149,8 @@ class TestUserDetailsSuccess:
 
 @pytest.mark.django_db
 class TestUserDetailsFailure:
-    def test_unauthenticated_user_does_not_retrieve_user_details(self, client):
-        """GIVEN an unauthenticated user
+    def test_anonymous_user_does_not_retrieve_user_details(self, client):
+        """GIVEN an anonymous user
 
         WHEN that user tries to retrieve user details
 
@@ -358,15 +358,74 @@ class TestAddressUpdateFailure:
         update_response = update_address(address_id, **update_dict)
         assert update_response.status_code == 400
 
+    def test_anonymous_user_cannot_update_address(self, create_address, update_address, client):
+        """GIVEN an anonymous user
+
+        WHEN the user tries to update an existing address
+
+        THEN permission is denied and the correct Http error code is returned.
+        """
+        create_response = create_address()
+        address_id = create_response.json()["id"]
+
+        update_response = update_address(address_id, anonymous=True, zip_code="12345")
+        assert update_response.status_code == 403
+
 
 @pytest.mark.django_db
 class TestAddressDeletionSuccess:
-    pass
+    def test_correct_http_response_upon_deletion(self, create_address, delete_address):
+        """GIVEN an authenticated user with an existing address
+
+        WHEN the user deletes that address
+
+        THEN the correct Http response is returned.
+        """
+        create_response = create_address()
+        address_id = create_response.json()["id"]
+
+        delete_response = delete_address(address_id)
+        assert delete_response.status_code == 204
+
+    def test_address_is_deleted_from_db(self, create_address, delete_address, user):
+        """GIVEN an authenticated user with an existing address
+
+        WHEN the user deletes that address via the API
+
+        THEN the address is deleted in the database.
+        """
+        response = create_address()
+        address_id = response.json()["id"]
+
+        delete_address(address_id)
+        assert not user.addresses.filter(id=address_id).exists()
 
 
 @pytest.mark.django_db
 class TestAddressDeletionFailure:
-    pass
+    def test_anonymous_user_cannot_delete_address(self, create_address, delete_address, client):
+        """GIVEN an anonymous user
+
+        WHEN the user tries to delete an existing address
+
+        THEN permission is denied and the correct Http error code is returned.
+        """
+        create_response = create_address()
+        address_id = create_response.json()["id"]
+
+        delete_response = delete_address(address_id, anonymous=True)
+        assert delete_response.status_code == 403
+
+    def test_updating_non_existing_address_throws_404(self, delete_address):
+        """GIVEN an authenticated user
+
+        WHEN the user tries to delete a non-existing address
+
+        THEN the correct Http error code is returned.
+        """
+        NON_EXISTING_ADDRESS_ID = 9999
+        response = delete_address(NON_EXISTING_ADDRESS_ID)
+        assert response.status_code == 404
 
 
 @pytest.mark.django_db
