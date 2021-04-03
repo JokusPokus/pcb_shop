@@ -46,6 +46,8 @@ def create_address(client, user) -> Callable:
         if address_data is None:
             address_data = VALID_ADDRESS.copy()
 
+        if anonymous and user.is_authenticated:
+            client.logout()
         if not anonymous:
             client.force_login(user)
 
@@ -87,7 +89,8 @@ def update_address(client, user) -> Callable:
         if address is None:
             address = VALID_ADDRESS.copy()
 
-        client.logout()
+        if anonymous and user.is_authenticated:
+            client.logout()
         if not anonymous:
             client.force_login(user)
 
@@ -109,7 +112,8 @@ def delete_address(client, user) -> Callable:
         """Closure that deletes an existing address for a user.
         If :anonymous: is set to False, the client will be authenticated.
         """
-        client.logout()
+        if anonymous and user.is_authenticated:
+            client.logout()
         if not anonymous:
             client.force_login(user)
 
