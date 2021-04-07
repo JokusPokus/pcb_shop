@@ -129,3 +129,5 @@ dmypy.json
 .pyre/
 
 pcb_shop/settings/dev.py
+
+*.exe
