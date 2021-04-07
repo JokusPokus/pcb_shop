@@ -1,10 +1,14 @@
 import time
-import bs4
 
+from typing import Dict, List, TypeVar, Optional
 from abc import ABC, abstractmethod
 from bs4 import BeautifulSoup
+from bs4.element import Tag, NavigableString, Comment
 
 from context_managers import WebDriver
+
+
+HtmlString = str
 
 
 class Crawler(ABC):
@@ -13,8 +17,8 @@ class Crawler(ABC):
         self.url = url
         self.doc = self._get_doc()
 
-    def _get_html(self):
-        """Returns the HTML file returned from a GET request
+    def _get_html(self) -> HtmlString:
+        """Returns a string representation of the HTML returned from a GET request
         to the Crawler instance's URL as bytes.
         """
         try:
@@ -28,11 +32,14 @@ class Crawler(ABC):
         return r.content
 
     def _get_doc(self):
+        """Returns a BeautifulSoup object around the crawler instance's html page."""
         html = self._get_html()
         return BeautifulSoup(html, 'html.parser')
 
     @abstractmethod
-    def get_board_options(self):
+    def get_board_options(self) -> Dict:
+        """Returns a dictionary with all current option labels as keys
+        and lists of the according choices as values."""
         pass
 
 
@@ -42,25 +49,39 @@ class JLCCrawler(Crawler):
     def __init__(self):
         super().__init__(self.url)
 
-    def _get_html(self):
+    def _get_html(self) -> HtmlString:
+        """Uses a webdriver to send a GET request to the crawler instance's <self.url>.
+
+        The returned html page is already (dynamically) rendered by the web driver and
+        is represented as a string.
+        """
         with WebDriver("Chrome") as driver:
             driver.get(self.url)
 
+            # Ensure that html is fully rendered through JavaScript
             time.sleep(2)
             return driver.page_source
 
-    def _get_board_option_divs(self):
-        def is_div_with_label(tag):
+    def _get_board_option_divs(self) -> List[Tag]:
+        """On the JLCPCB site, information about each board option is encapsulated in an html div
+        that contains a label tag. This function returns a list of such container divs.
+        """
+        def is_div_with_label(tag: Tag) -> bool:
+            """Returns True if the <tag> is an html div that contains a label div,
+            otherwise False.
+            """
             return (
                 tag.name == "div"
                 and any([child.name == "label" for child in tag.contents])
             )
+        # All divs containing board option information are located within
+        # a large div with the class "home-orderadd-pcb":
         main_div = self.doc.find("div", class_="home-orderadd-pcb")
         return main_div.find_all(is_div_with_label)
 
     @staticmethod
-    def _parse_single_option(option):
-        first_div_in_label = option.label.find("div")
+    def _parse_single_option(option_div: Tag) -> Optional[str]:
+        first_div_in_label = option_div.label.find("div")
 
         if first_div_in_label is None:
             return None
@@ -68,17 +89,17 @@ class JLCCrawler(Crawler):
         siblings = first_div_in_label.previous_siblings
 
         for sibling in siblings:
-            if isinstance(sibling, bs4.element.Comment):
+            if isinstance(sibling, Comment):
                 continue
 
-            elif isinstance(sibling, bs4.element.NavigableString) and sibling.strip() != "":
+            elif isinstance(sibling, NavigableString) and sibling.strip() != "":
                 return str(sibling).strip()
 
-            elif isinstance(sibling, bs4.element.Tag):
+            elif isinstance(sibling, Tag):
                 return str(sibling.string).strip()
         return None
 
-    def _parse_board_options(self):
+    def _parse_board_options(self) -> List[str]:
         board_options = self._get_board_option_divs()
 
         option_labels = []
