@@ -58,27 +58,34 @@ class JLCCrawler(Crawler):
         main_div = self.doc.find("div", class_="home-orderadd-pcb")
         return main_div.find_all(is_div_with_label)
 
+    @staticmethod
+    def _parse_single_option(option):
+        first_div_in_label = option.label.find("div")
+
+        if first_div_in_label is None:
+            return None
+
+        siblings = first_div_in_label.previous_siblings
+
+        for sibling in siblings:
+            if isinstance(sibling, bs4.element.Comment):
+                continue
+
+            elif isinstance(sibling, bs4.element.NavigableString) and sibling.strip() != "":
+                return str(sibling).strip()
+
+            elif isinstance(sibling, bs4.element.Tag):
+                return str(sibling.string).strip()
+        return None
+
     def _parse_board_options(self):
         board_options = self._get_board_option_divs()
+
         option_labels = []
         for option in board_options:
-            first_div_in_label = option.label.find("div")
-
-            if first_div_in_label is None:
-                break
-
-            siblings = list(first_div_in_label.previous_siblings)
-
-            while siblings:
-                sibling = siblings.pop(0)
-                if isinstance(sibling, bs4.element.Comment):
-                    continue
-                elif isinstance(sibling, bs4.element.NavigableString) and sibling.strip() != "":
-                    option_labels.append(str(sibling).strip())
-                    break
-                elif isinstance(sibling, bs4.element.Tag):
-                    option_labels.append(str(sibling.string).strip())
-                    break
+            label = self._parse_single_option(option)
+            if label is not None:
+                option_labels.append(label)
         return option_labels
 
     def get_board_options(self):
