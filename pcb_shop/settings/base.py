@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'article.apps.ArticleConfig',
     'payment.apps.PaymentConfig',
     'order.apps.OrderConfig',
+    'scraper.apps.ScraperConfig',
 
     'allauth',
     'allauth.account',
