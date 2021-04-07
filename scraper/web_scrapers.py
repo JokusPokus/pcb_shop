@@ -1,7 +1,10 @@
 import time
+import bs4
 
 from abc import ABC, abstractmethod
 from bs4 import BeautifulSoup
+
+from context_managers import WebDriver
 
 
 class Crawler(ABC):
@@ -42,6 +45,7 @@ class JLCCrawler(Crawler):
     def _get_html(self):
         with WebDriver("Chrome") as driver:
             driver.get(self.url)
+
             time.sleep(2)
             return driver.page_source
 
@@ -58,7 +62,23 @@ class JLCCrawler(Crawler):
         board_options = self._get_board_option_divs()
         option_labels = []
         for option in board_options:
-            print(option.label.find("div").previous_sibling)
+            first_div_in_label = option.label.find("div")
+
+            if first_div_in_label is None:
+                break
+
+            siblings = list(first_div_in_label.previous_siblings)
+
+            while siblings:
+                sibling = siblings.pop(0)
+                if isinstance(sibling, bs4.element.Comment):
+                    continue
+                elif isinstance(sibling, bs4.element.NavigableString) and sibling.strip() != "":
+                    option_labels.append(str(sibling).strip())
+                    break
+                elif isinstance(sibling, bs4.element.Tag):
+                    option_labels.append(str(sibling.string).strip())
+                    break
         return option_labels
 
     def get_board_options(self):
@@ -67,3 +87,4 @@ class JLCCrawler(Crawler):
 
 if __name__ == "__main__":
     crawler = JLCCrawler()
+    print(crawler._parse_board_options())
