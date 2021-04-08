@@ -1,4 +1,5 @@
 import time
+from pprint import pprint
 
 from typing import Dict, List, TypeVar, Optional
 from abc import ABC, abstractmethod
@@ -39,7 +40,8 @@ class Crawler(ABC):
     @abstractmethod
     def get_board_options(self) -> Dict:
         """Returns a dictionary with all current option labels as keys
-        and lists of the according choices as values."""
+        and lists of the according choices as values.
+        """
         pass
 
 
@@ -82,7 +84,8 @@ class JLCCrawler(Crawler):
     @staticmethod
     def _get_option_label(option_div: Tag) -> Optional[str]:
         """Accepts an option container div and returns the label of that option,
-        or None if no label can be found."""
+        or None if no label can be found.
+        """
         first_div_in_label = option_div.label.find("div")
 
         if first_div_in_label is None:
@@ -102,43 +105,51 @@ class JLCCrawler(Crawler):
         return None
 
     @staticmethod
-    def _get_option_values_from_form_group(option_div: Tag) -> List:
+    def _get_option_values_from_form_group(option_div: Tag) -> Optional[List]:
         """In the JLCPCB html, most option values are represented as buttons
         within a div with css class 'formgroup'.
 
         This function returns a list of all option values found in such a
-        formgroup div.
+        formgroup div, or None if none are found.
         """
         form_group_div = option_div.find("div", class_="formgroup")
         try:
-            option_values = [button.string.strip() for button in form_group_div.find_all("button")]
+            option_values = [button.text.strip() for button in form_group_div.find_all("button")]
             return option_values
-        except Exception:
+        except TypeError:
             return None
 
-    def _parse_board_options(self) -> Dict[str, List]:
+    def get_board_options(self) -> Dict[str, List]:
+        """Returns a dictionary with all current option labels as keys
+        and lists of the according choices as values.
+        """
         board_option_divs = self._get_board_option_divs()
 
         board_options = {}
         for div in board_option_divs:
             label = self._get_option_label(div)
+
             if label is not None:
                 values = self._get_option_values_from_form_group(div)
                 board_options[label] = values
+
         return board_options
 
-    def get_board_options(self):
-        return self._parse_board_options()
-
-    def show_option_div(self):
+    def show_option_div(self, position: int) -> None:
+        """Utility to quickly check for frontend changes of JLCPCB.
+        Prints the first option container div found in the html.
+        """
         print(self._get_board_option_divs()[0].prettify())
 
     def show_option_divs(self):
+        """Utility to quickly check for frontend changes of JLCPCB.
+        Prints all option container divs found in the html.
+        """
         for div in self._get_board_option_divs():
             print(div.prettify())
 
 
 if __name__ == "__main__":
     crawler = JLCCrawler()
-    # crawler.show_option_divs()
-    print(crawler.get_board_options())
+    crawler.show_option_divs()
+    pprint(crawler.get_board_options())
