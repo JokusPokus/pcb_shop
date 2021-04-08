@@ -80,7 +80,9 @@ class JLCCrawler(Crawler):
         return main_div.find_all(is_div_with_label)
 
     @staticmethod
-    def _parse_single_option(option_div: Tag) -> Optional[str]:
+    def _get_option_label(option_div: Tag) -> Optional[str]:
+        """Accepts an option container div and returns the label of that option,
+        or None if no label can be found."""
         first_div_in_label = option_div.label.find("div")
 
         if first_div_in_label is None:
@@ -99,12 +101,16 @@ class JLCCrawler(Crawler):
                 return str(sibling.string).strip()
         return None
 
+    @staticmethod
+    def _get_option_values(option_div: Tag) -> List:
+        pass
+
     def _parse_board_options(self) -> List[str]:
         board_options = self._get_board_option_divs()
 
         option_labels = []
         for option in board_options:
-            label = self._parse_single_option(option)
+            label = self._get_option_label(option)
             if label is not None:
                 option_labels.append(label)
         return option_labels
@@ -112,7 +118,14 @@ class JLCCrawler(Crawler):
     def get_board_options(self):
         pass
 
+    def show_option_div(self):
+        print(self._get_board_option_divs()[0].prettify())
+
+    def show_option_divs(self):
+        for div in self._get_board_option_divs():
+            print(div.prettify())
+
 
 if __name__ == "__main__":
     crawler = JLCCrawler()
-    print(crawler._parse_board_options())
+    crawler.show_option_divs()
