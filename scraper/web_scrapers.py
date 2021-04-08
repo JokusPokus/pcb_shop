@@ -13,6 +13,7 @@ HtmlString = str
 
 
 class Crawler(ABC):
+    """Abstract base class for web crawlers."""
     @abstractmethod
     def __init__(self, url):
         self.url = url
@@ -33,7 +34,7 @@ class Crawler(ABC):
         return r.content
 
     def _get_doc(self):
-        """Returns a BeautifulSoup object around the crawler instance's html page."""
+        """Returns a BeautifulSoup object around the crawler instance's HTML page."""
         html = self._get_html()
         return BeautifulSoup(html, 'html.parser')
 
@@ -54,22 +55,22 @@ class JLCCrawler(Crawler):
     def _get_html(self) -> HtmlString:
         """Uses a webdriver to send a GET request to the crawler instance's <self.url>.
 
-        The returned html page is already (dynamically) rendered by the web driver and
+        The returned HTML page is already (dynamically) rendered by the web driver and
         is represented as a string.
         """
         with WebDriver("Chrome") as driver:
             driver.get(self.url)
 
-            # Ensure that html is fully rendered through JavaScript
+            # Ensure that HTML is fully rendered through JavaScript
             time.sleep(2)
             return driver.page_source
 
     def _get_board_option_divs(self) -> List[Tag]:
-        """On the JLCPCB site, information about each board option is encapsulated in an html div
+        """On the JLCPCB site, information about each board option is encapsulated in an HTML div
         that contains a label tag. This function returns a list of such container divs.
         """
         def is_div_with_label(tag: Tag) -> bool:
-            """Returns True if the <tag> is an html div that contains a label div,
+            """Returns True if the <tag> is an HTML div that contains a label div,
             otherwise False.
             """
             return (
@@ -106,7 +107,7 @@ class JLCCrawler(Crawler):
 
     @staticmethod
     def _get_option_values_from_form_group(option_div: Tag) -> Optional[List]:
-        """In the JLCPCB html, most option values are represented as buttons
+        """In the JLCPCB HTML, most option values are represented as buttons
         within a div with css class 'formgroup'.
 
         This function returns a list of all option values found in such a
@@ -143,7 +144,7 @@ class JLCCrawler(Crawler):
 
     def show_option_divs(self):
         """Utility to quickly check for frontend changes of JLCPCB.
-        Prints all option container divs found in the html.
+        Prints all option container divs found in the HTML.
         """
         for div in self._get_board_option_divs():
             print(div.prettify())
