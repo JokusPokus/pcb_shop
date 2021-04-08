@@ -135,11 +135,11 @@ class JLCCrawler(Crawler):
 
         return board_options
 
-    def show_option_div(self, position: int) -> None:
+    def show_option_div(self, index: int) -> None:
         """Utility to quickly check for frontend changes of JLCPCB.
-        Prints the first option container div found in the html.
+        Prints the option container div at <index>.
         """
-        print(self._get_board_option_divs()[0].prettify())
+        print(self._get_board_option_divs()[index].prettify())
 
     def show_option_divs(self):
         """Utility to quickly check for frontend changes of JLCPCB.
