@@ -102,21 +102,33 @@ class JLCCrawler(Crawler):
         return None
 
     @staticmethod
-    def _get_option_values(option_div: Tag) -> List:
-        pass
+    def _get_option_values_from_form_group(option_div: Tag) -> List:
+        """In the JLCPCB html, most option values are represented as buttons
+        within a div with css class 'formgroup'.
 
-    def _parse_board_options(self) -> List[str]:
-        board_options = self._get_board_option_divs()
+        This function returns a list of all option values found in such a
+        formgroup div.
+        """
+        form_group_div = option_div.find("div", class_="formgroup")
+        try:
+            option_values = [button.string.strip() for button in form_group_div.find_all("button")]
+            return option_values
+        except Exception:
+            return None
 
-        option_labels = []
-        for option in board_options:
-            label = self._get_option_label(option)
+    def _parse_board_options(self) -> Dict[str, List]:
+        board_option_divs = self._get_board_option_divs()
+
+        board_options = {}
+        for div in board_option_divs:
+            label = self._get_option_label(div)
             if label is not None:
-                option_labels.append(label)
-        return option_labels
+                values = self._get_option_values_from_form_group(div)
+                board_options[label] = values
+        return board_options
 
     def get_board_options(self):
-        pass
+        return self._parse_board_options()
 
     def show_option_div(self):
         print(self._get_board_option_divs()[0].prettify())
@@ -128,4 +140,5 @@ class JLCCrawler(Crawler):
 
 if __name__ == "__main__":
     crawler = JLCCrawler()
-    crawler.show_option_divs()
+    # crawler.show_option_divs()
+    print(crawler.get_board_options())
