@@ -10,7 +10,6 @@ from article.models import Board, ArticleCategory
 from .conftest import VALID_BOARD_DATA
 
 
-@pytest.mark.usefixtures("create_pcb_category")
 @pytest.mark.django_db
 class TestBoardCreationSuccess:
     def test_correct_http_response(self, create_boards, user):
@@ -51,7 +50,6 @@ class TestBoardCreationSuccess:
         assert Board.objects.filter(id=board_id, **VALID_BOARD_DATA).exists()
 
 
-@pytest.mark.usefixtures("create_pcb_category")
 @pytest.mark.django_db
 class TestBoardCreationFailure:
     def test_correct_http_response_for_anonymous_user(self, create_boards):
@@ -118,7 +116,6 @@ class TestBoardCreationFailure:
         assert not Board.objects.filter(**incomplete_data).exists()
 
 
-@pytest.mark.usefixtures("create_pcb_category")
 @pytest.mark.django_db
 class TestBoardList:
     def test_200_status_and_list_is_complete(self, create_boards, authenticated_client):
@@ -178,7 +175,6 @@ class TestBoardList:
         assert len(board_list) == 0
 
 
-@pytest.mark.usefixtures("create_pcb_category")
 @pytest.mark.django_db
 class TestBoardDetailsSuccess:
     """Collection of test cases for retrieving board details."""
@@ -203,7 +199,6 @@ class TestBoardDetailsSuccess:
         assert VALID_BOARD_DATA.items() <= board_details.items()
 
 
-@pytest.mark.usefixtures("create_pcb_category")
 @pytest.mark.django_db
 class TestBoardDetailsFailure:
     def test_no_details_for_other_users_board(self, authenticated_client, create_boards, other_user):
