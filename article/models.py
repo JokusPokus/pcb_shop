@@ -31,7 +31,7 @@ class Article(models.Model):
     )
 
     class Meta:
-        ordering = ['created']
+        ordering = ['-created']
 
 
 class Board(Article):
@@ -46,24 +46,7 @@ class Board(Article):
     gerberFileName = models.CharField(max_length=100)
     gerberHash = models.CharField(max_length=100)
 
-    # *************
-    # Board options
-    # *************
-
-    dimensionX = models.FloatField(validators=[MinValueValidator(0)])
-    dimensionY = models.FloatField(validators=[MinValueValidator(0)])
-    differentDesigns = models.PositiveIntegerField()
-    layers = models.PositiveIntegerField()
-    deliveryFormat = models.CharField(max_length=30)
-    thickness = models.FloatField()
-    color = models.CharField(max_length=30)
-    surfaceFinish = models.CharField(max_length=30)
-    copperWeight = models.PositiveIntegerField()
-    goldFingers = models.CharField(max_length=30)
-    castellatedHoles = models.CharField(max_length=30)
-    removeOrderNum = models.CharField(max_length=30)
-    confirmProdFile = models.CharField(max_length=30)
-    flyingProbeTest = models.CharField(max_length=30)
+    attributes = models.JSONField()
 
     class Meta:
-        ordering = ['created']
+        ordering = ['-created']
