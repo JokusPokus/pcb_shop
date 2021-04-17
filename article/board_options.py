@@ -8,5 +8,5 @@ class BoardOptionValidator:
     """
     def __init__(self, shop: Optional[str] = None):
         if shop is None:
-            pass
-        pass
+            shop = ExternalShop.objects.get(name="JLCPCB")
+        self.shop = shop
