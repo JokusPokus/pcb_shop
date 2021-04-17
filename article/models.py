@@ -1,9 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.core.validators import MaxValueValidator, MinValueValidator
-
-from article.board_options import OPTIONS
-
 
 # Let's set a default category ("Misc", for example)
 # that products can fall back to in the unlikely event that we delete a category.
