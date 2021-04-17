@@ -1,11 +1,17 @@
 from rest_framework import serializers
-from .models import Board, Article
+from .models import Board, Article, OfferedBoardOptions
 
 
 class BoardSerializer(serializers.ModelSerializer):
-    owner = serializers.CharField(source='owner.email', read_only=True)
-    category = serializers.CharField(source='category.name', read_only=True)
+    owner = serializers.CharField(source="owner.email", read_only=True)
+    category = serializers.CharField(source="category.name", read_only=True)
 
     class Meta:
         model = Board
-        fields = '__all__'
+        fields = "__all__"
+
+
+class OfferedBoardOptionsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OfferedBoardOptions
+        fields = ["attribute_options"]
