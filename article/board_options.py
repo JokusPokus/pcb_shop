@@ -23,13 +23,36 @@ class BoardOptionValidator:
         """
         return self.shop.externalboardoptions_set.first()
 
-    def is_valid(self, options: dict):
-        """Returns True if the complete set of internal board options
-        is validated against the set of externally available options.
+    def _validate_option(self, label: str, internal_values: dict) -> None:
+        """Validates a single board option against externally available option."""
+        external_values = self.external_options.get(label)
 
-        Raises BoardOptionError otherwise.
+        if external_values is None:
+            raise BoardOptionError(f"Externally available options do not contain '{label}'.")
+
+        if "choices" in internal_values and "choices" in external_values:
+            if not set(internal_values) <= set(external_values):
+                raise BoardOptionError(f"At least one internal option for '{label}' is not externally available.")
+
+        elif "range" in internal_values and "range" in external_values:
+            if (
+                    internal_values["range"]["min"] < external_values["range"]["min"]
+                    or internal_values["range"]["max"] > external_values["range"]["max"]
+            ):
+                raise BoardOptionError(f"'{label}' span is not fully contained in externally available option span.")
+
+        else:
+            raise BoardOptionError(f"Board option types for internal and external '{label}' values do not match.")
+
+        return None
+
+    def validate(self, options: dict) -> bool:
+        """Raises BoardOptionError if any of the internal board options
+        is not valid against the set of externally available options.
+
+        Returns None otherwise.
         """
         for label, values in options.items():
-            if not self._validate_option(label, values):
-                raise BoardOptionError(f"The '{label}' option does not conform with externally available options.")
-            return True
+            self._validate_option(label, values)
+
+        return None
