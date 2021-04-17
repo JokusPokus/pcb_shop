@@ -6,6 +6,7 @@ from .permissions import IsBoardOwner
 
 from .models import Board, ArticleCategory, OfferedBoardOptions
 from .serializers import BoardSerializer, OfferedBoardOptionsSerializer
+from .board_options import BoardOptionValidator
 
 
 class BoardList(generics.ListCreateAPIView):
@@ -44,8 +45,19 @@ class BoardDetails(generics.RetrieveAPIView):
 
 
 class BoardOptions(generics.RetrieveAPIView):
-    """Returns all currently available attribute options for PCB board."""
+    """Returns all currently available attribute options for PCB board.
+
+    If the current internal options are not valid against the latest check of
+    externally vailable options, a 404 HTTP response is raised.
+    """
     serializer_class = OfferedBoardOptionsSerializer
 
     def get_object(self):
-        return OfferedBoardOptions.objects.first()
+        board_options = OfferedBoardOptions.objects.first()
+        validator = BoardOptionValidator()
+        try:
+            validator.validate(board_options)
+        except BoardOptionError:
+            raise Http404("We are currently maintaining our offer. Please try again later.")
+
+        return board_options
