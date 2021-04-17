@@ -1,4 +1,5 @@
 import pytest
+import json
 
 from django.urls import reverse
 
@@ -6,22 +7,24 @@ from typing import Optional, Dict, Callable
 
 
 VALID_BOARD_DATA = {
-    "dimensionX": 100,
-    "dimensionY": 100,
     "gerberFileName": "gerber.zip",
     "gerberHash": "blablub123",
-    "differentDesigns": 1,
-    "layers": 3,
-    "deliveryFormat": "Single PCB",
-    "thickness": 1.6,
-    "color": "Red",
-    "surfaceFinish": "no",
-    "copperWeight": 2,
-    "goldFingers": "no",
-    "castellatedHoles": "no",
-    "removeOrderNum": "yes",
-    "confirmProdFile": "yes",
-    "flyingProbeTest": "no"
+    "attributes": {
+        "dimensionX": 100,
+        "dimensionY": 100,
+        "differentDesigns": 1,
+        "layers": 3,
+        "deliveryFormat": "Single PCB",
+        "thickness": 1.6,
+        "color": "Red",
+        "surfaceFinish": "no",
+        "copperWeight": 2,
+        "goldFingers": "no",
+        "castellatedHoles": "no",
+        "removeOrderNum": "yes",
+        "confirmProdFile": "yes",
+        "flyingProbeTest": "no"
+    }
 }
 
 
@@ -32,7 +35,11 @@ def create_boards(client, user) -> Callable:
         not authenticated.
         """
         if data is None:
-            data = VALID_BOARD_DATA
+            data = VALID_BOARD_DATA.copy()
+        else:
+            data = data.copy()
+
+        data["attributes"] = json.dumps(data["attributes"])
 
         if not anonymous:
             client.force_login(user)
