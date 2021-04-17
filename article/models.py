@@ -52,7 +52,27 @@ class Board(Article):
         ordering = ['-created']
 
 
+class ExternalShop(models.Model):
+    """Model for external PCB shop."""
+    created = models.DateTimeField(auto_now_add=True)
+    name = models.CharField(max_length=50)
+    country = models.CharField(max_length=50)
+
+
 class OfferedBoardOptions(models.Model):
     """Model to store the board options offered by the PCB shop at any given time."""
     created = models.DateTimeField(auto_now_add=True)
     attribute_options = models.JSONField()
+
+    class Meta:
+        ordering = ['-created']
+
+
+class ExternalBoardOptions(models.Model):
+    """Model to store the board options externally available in some PCB shop at any given time."""
+    created = models.DateTimeField(auto_now_add=True)
+    external_shop = models.ForeignKey(ExternalShop, on_delete=models.DO_NOTHING)
+    attribute_options = models.JSONField()
+
+    class Meta:
+        ordering = ['-created']
