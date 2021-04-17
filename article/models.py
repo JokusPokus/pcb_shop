@@ -50,3 +50,9 @@ class Board(Article):
 
     class Meta:
         ordering = ['-created']
+
+
+class OfferedBoardOptions(models.Model):
+    """Model to store the board options offered by the PCB shop at any given time."""
+    created = models.DateTimeField(auto_now_add=True)
+    attribute_options = models.JSONField()
