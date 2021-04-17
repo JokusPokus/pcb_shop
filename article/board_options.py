@@ -23,6 +23,29 @@ class BoardOptionValidator:
         """
         return self.shop.externalboardoptions_set.first()
 
+    @staticmethod
+    def _contains_choices(option_values):
+        return "choices" in option_values
+
+    @staticmethod
+    def _contains_range(option_values):
+        return "range" in option_values
+
+    @staticmethod
+    def _validate_choices(internal_values: dict, external_values: dict) -> None:
+        if not set(internal_values) <= set(external_values):
+            raise BoardOptionError(f"At least one internal option for '{label}' is not externally available.")
+        return None
+
+    @staticmethod
+    def _validate_range(internal_values: dict, external_values: dict) -> None:
+        if (
+                internal_values["range"]["min"] < external_values["range"]["min"]
+                or internal_values["range"]["max"] > external_values["range"]["max"]
+        ):
+            raise BoardOptionError(f"'{label}' span is not fully contained in externally available option span.")
+        return None
+
     def _validate_option(self, label: str, internal_values: dict) -> None:
         """Validates a single board option against externally available option."""
         external_values = self.external_options.get(label)
@@ -30,23 +53,18 @@ class BoardOptionValidator:
         if external_values is None:
             raise BoardOptionError(f"Externally available options do not contain '{label}'.")
 
-        if "choices" in internal_values and "choices" in external_values:
-            if not set(internal_values) <= set(external_values):
-                raise BoardOptionError(f"At least one internal option for '{label}' is not externally available.")
+        if self._contains_choices(internal_values) and self._contains_choices(external_values):
+            self._validate_choices(internal_values, external_values)
 
-        elif "range" in internal_values and "range" in external_values:
-            if (
-                    internal_values["range"]["min"] < external_values["range"]["min"]
-                    or internal_values["range"]["max"] > external_values["range"]["max"]
-            ):
-                raise BoardOptionError(f"'{label}' span is not fully contained in externally available option span.")
+        elif self._contains_range(internal_values) and self._contains_range(external_values):
+            self._validate_range(internal_values, external_values)
 
         else:
             raise BoardOptionError(f"Board option types for internal and external '{label}' values do not match.")
 
         return None
 
-    def validate(self, options: dict) -> bool:
+    def validate(self, options: dict) -> None:
         """Raises BoardOptionError if any of the internal board options
         is not valid against the set of externally available options.
 
