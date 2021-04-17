@@ -4,8 +4,8 @@ from rest_framework import generics
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from .permissions import IsBoardOwner
 
-from .models import Board, ArticleCategory
-from .serializers import BoardSerializer
+from .models import Board, ArticleCategory, OfferedBoardOptions
+from .serializers import BoardSerializer, OfferedBoardOptionsSerializer
 
 
 class BoardList(generics.ListCreateAPIView):
@@ -41,3 +41,11 @@ class BoardDetails(generics.RetrieveAPIView):
             return super().dispatch(request, *args, **kwargs)
         except Board.DoesNotExist:
             raise Http404
+
+
+class BoardOptions(generics.RetrieveAPIView):
+    """Returns all currently available attribute options for PCB board."""
+    serializer_class = OfferedBoardOptionsSerializer
+
+    def get_object(self):
+        return OfferedBoardOptions.objects.first()
