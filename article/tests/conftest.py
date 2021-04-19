@@ -49,3 +49,20 @@ def create_boards(client, user) -> Callable:
 
         return response if num_boards == 1 else None
     return _create_boards
+
+
+@pytest.fixture
+def choice_attribute():
+    return {
+        "choices": [1, 2, 3]
+    }
+
+
+@pytest.fixture
+def range_attribute():
+    return {
+        "range": {
+            "min": 10,
+            "max": 100,
+        }
+    }
