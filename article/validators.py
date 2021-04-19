@@ -84,6 +84,11 @@ class BoardOptionValidator:
         return None
 
 
-def validate_external_consistency(options):
+def validate_external_consistency(options: dict) -> None:
+    """Custom validator to validate internally offered board options against
+    externally available board options.
+
+    Raises ValidationError if internal options are not valid.
+    """
     validator = BoardOptionValidator()
     validator.validate(options)
