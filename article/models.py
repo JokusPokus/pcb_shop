@@ -65,6 +65,9 @@ class ExternalShop(models.Model):
     name = models.CharField(max_length=50)
     country = models.CharField(max_length=50)
 
+    class Meta:
+        verbose_name = "Eternal Shop"
+
     def __str__(self):
         return f"<ExternalShop: {self.name}>"
 
@@ -76,6 +79,8 @@ class OfferedBoardOptions(models.Model):
 
     class Meta:
         ordering = ['-created']
+        verbose_name = "Offered Board Options"
+        verbose_name_plural = "Offered Board Options List"
 
     def __str__(self):
         return f"<OfferedBoardOptions created at {self.created}>"
@@ -89,6 +94,8 @@ class ExternalBoardOptions(models.Model):
 
     class Meta:
         ordering = ['-created']
+        verbose_name = "External Board Options"
+        verbose_name_plural = "External Board Options List"
 
     def __str__(self):
         return f"<ExternalBoardOptions from shop '{self.external_shop.name}'>"
