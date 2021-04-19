@@ -15,6 +15,13 @@ class ArticleCategory(models.Model):
     name = models.CharField(max_length=30)
     description = models.TextField(max_length=200)
 
+    class Meta:
+        verbose_name = "Article Category"
+        verbose_name_plural = "Article Categories"
+
+    def __str__(self):
+        return f"<ArticleCategory: {self.name}>"
+
 
 class Article(models.Model):
     """Model for any article sold in the shop,
@@ -48,12 +55,18 @@ class Board(Article):
     class Meta:
         ordering = ['-created']
 
+    def __str__(self):
+        return f"<Board by user {self.owner.email}>"
+
 
 class ExternalShop(models.Model):
     """Model for external PCB shop."""
     created = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=50)
     country = models.CharField(max_length=50)
+
+    def __str__(self):
+        return f"<ExternalShop: {self.name}>"
 
 
 class OfferedBoardOptions(models.Model):
@@ -64,6 +77,9 @@ class OfferedBoardOptions(models.Model):
     class Meta:
         ordering = ['-created']
 
+    def __str__(self):
+        return f"<OfferedBoardOptions created at {self.created}>"
+
 
 class ExternalBoardOptions(models.Model):
     """Model to store the board options externally available in some PCB shop at any given time."""
@@ -73,3 +89,6 @@ class ExternalBoardOptions(models.Model):
 
     class Meta:
         ordering = ['-created']
+
+    def __str__(self):
+        return f"<ExternalBoardOptions from shop '{self.external_shop.name}'>"
