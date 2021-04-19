@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+from article.validators import validate_external_consistency
 # Let's set a default category ("Misc", for example)
 # that products can fall back to in the unlikely event that we delete a category.
 DEFAULT_CATEGORY = 1
@@ -58,7 +59,7 @@ class ExternalShop(models.Model):
 class OfferedBoardOptions(models.Model):
     """Model to store the board options offered by the PCB shop at any given time."""
     created = models.DateTimeField(auto_now_add=True)
-    attribute_options = models.JSONField()
+    attribute_options = models.JSONField(validators=[validate_external_consistency])
 
     class Meta:
         ordering = ['-created']

@@ -1,5 +1,5 @@
 from django.contrib import admin
-
+from django.core.exceptions import ValidationError
 from article.models import (
     Article,
     ArticleCategory,
@@ -8,6 +8,8 @@ from article.models import (
     ExternalBoardOptions,
     OfferedBoardOptions
 )
+from article.validators import BoardOptionValidator
+
 
 admin.site.register(Article)
 admin.site.register(ArticleCategory)

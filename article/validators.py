@@ -1,10 +1,6 @@
 from typing import Optional
-from article.models import ExternalShop
-
-
-class BoardOptionError(Exception):
-    """Raised when internal board option does not confirm with externally available one."""
-    pass
+from django.core.exceptions import ValidationError
+from django.apps import apps
 
 
 class BoardOptionValidator:
@@ -13,6 +9,7 @@ class BoardOptionValidator:
     """
     def __init__(self, shop: Optional[str] = None):
         if shop is None:
+            ExternalShop = apps.get_model('article', 'ExternalShop')
             shop = ExternalShop.objects.get(name="JLCPCB")
         self.shop = shop
         self.external_options = self._get_external_options()
@@ -21,7 +18,7 @@ class BoardOptionValidator:
         """Returns the most up-to-date version of the board options
         offered by self.shop.
         """
-        return self.shop.externalboardoptions_set.first()
+        return self.shop.externalboardoptions_set.first().attribute_options
 
     @staticmethod
     def _contains_choices(option_values):
@@ -32,18 +29,24 @@ class BoardOptionValidator:
         return "range" in option_values
 
     @staticmethod
-    def _validate_choices(internal_values: dict, external_values: dict) -> None:
-        if not set(internal_values) <= set(external_values):
-            raise BoardOptionError(f"At least one internal option for '{label}' is not externally available.")
+    def _validate_choices(internal_values: dict, external_values: dict, label: str) -> None:
+        if not set(internal_values["choices"]) <= set(external_values["choices"]):
+            raise ValidationError(
+                f"At least one internal option for '{label}' is not externally available.",
+                code="choice"
+            )
         return None
 
     @staticmethod
-    def _validate_range(internal_values: dict, external_values: dict) -> None:
+    def _validate_range(internal_values: dict, external_values: dict, label: str) -> None:
         if (
                 internal_values["range"]["min"] < external_values["range"]["min"]
                 or internal_values["range"]["max"] > external_values["range"]["max"]
         ):
-            raise BoardOptionError(f"'{label}' span is not fully contained in externally available option span.")
+            raise ValidationError(
+                f"'{label}' span is not fully contained in externally available option span.",
+                code="span"
+            )
         return None
 
     def _validate_option(self, label: str, internal_values: dict) -> None:
@@ -51,17 +54,22 @@ class BoardOptionValidator:
         external_values = self.external_options.get(label)
 
         if external_values is None:
-            raise BoardOptionError(f"Externally available options do not contain '{label}'.")
+            raise ValidationError(
+                f"Externally available options do not contain '{label}'.",
+                code="missing_label"
+            )
 
         if self._contains_choices(internal_values) and self._contains_choices(external_values):
-            self._validate_choices(internal_values, external_values)
+            self._validate_choices(internal_values, external_values, label)
 
         elif self._contains_range(internal_values) and self._contains_range(external_values):
-            self._validate_range(internal_values, external_values)
+            self._validate_range(internal_values, external_values, label)
 
         else:
-            raise BoardOptionError(f"Board option types for internal and external '{label}' values do not match.")
-
+            raise ValidationError(
+                f"Board option types for internal and external '{label}' values do not match.",
+                code="attribute_type"
+            )
         return None
 
     def validate(self, options: dict) -> None:
@@ -74,3 +82,8 @@ class BoardOptionValidator:
             self._validate_option(label, values)
 
         return None
+
+
+def validate_external_consistency(options):
+    validator = BoardOptionValidator()
+    validator.validate(options)

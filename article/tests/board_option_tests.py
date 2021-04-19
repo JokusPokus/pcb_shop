@@ -1,6 +1,6 @@
 import pytest
 
-from article.board_options import BoardOptionValidator
+from article.validators import BoardOptionValidator
 
 
 class TestPrivateMethods:

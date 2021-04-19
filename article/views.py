@@ -6,7 +6,7 @@ from .permissions import IsBoardOwner
 
 from .models import Board, ArticleCategory, OfferedBoardOptions
 from .serializers import BoardSerializer, OfferedBoardOptionsSerializer
-from .board_options import BoardOptionValidator
+from .validators import BoardOptionValidator
 
 
 class BoardList(generics.ListCreateAPIView):
