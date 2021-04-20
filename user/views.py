@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from rest_framework import generics
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 
-from .models import User
+from .models import User, BasketItem
 from .address_management import Address, disable_old_default, set_new_default
 from .serializers import UserSerializer, AddressSerializer
 
@@ -106,4 +106,5 @@ def change_address_default(request):
     return JsonResponse(response_body)
 
 
-
+class BasketItemDetails(generics.RetrieveDestroyAPIView):
+    serializer_class = BasketItemSerializer

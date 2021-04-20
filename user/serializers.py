@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Profile
+from .models import User, Profile, BasketItem
 from .address_management import Address
 
 
@@ -36,3 +36,8 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
+
+class BasketItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BasketItem
+        fields = ('owner', 'article')
