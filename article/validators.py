@@ -33,12 +33,10 @@ class AttributeValidator:
             )
 
     def _validate_attribute(self, label: str, value: Union[str, int, float]) -> None:
-        offered_attribute_options = self.offered_options.get(label)
+        offered_attribute_values = self.offered_options.get(label)
 
-        if offered_attribute_options is None:
+        if offered_attribute_values is None:
             raise ValidationError(f"The '{label}' option is currently not offered.", code="option_not_offered")
-
-        offered_attribute_values = offered_attribute_options[label]
 
         if "choices" in offered_attribute_values:
             self._validate_choice(value, offered_attribute_values["choices"], label)

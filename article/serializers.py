@@ -9,12 +9,13 @@ class BoardSerializer(serializers.ModelSerializer):
     owner = serializers.CharField(source="owner.email", read_only=True)
     category = serializers.CharField(source="category.name", read_only=True)
 
-    def validate_attributes(self) -> None:
+    def validate_attributes(self, data) -> None:
         validator = AttributeValidator()
         try:
-            validator.validate(self.attributes)
+            validator.validate(data)
         except ValidationError as e:
             raise serializers.ValidationError("Not all chosen attributes are currently available:", e)
+        return data
 
     class Meta:
         model = Board
