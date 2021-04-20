@@ -68,7 +68,4 @@ class BoardOptions(generics.RetrieveAPIView):
                 status=404,
                 data={"detail": "We are currently maintaining our offer. Please try again later."}
             )
-        return JsonResponse(
-            status=200,
-            data=board_options
-        )
+        return JsonResponse(status=200, data=board_options)

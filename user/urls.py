@@ -11,5 +11,5 @@ urlpatterns = [
     path('attributes/addresses/<int:pk>/', views.AddressDetails.as_view(), name='address_details'),
     path('attributes/addresses/change-default/', views.change_address_default, name='change_address_default'),
     path('basket/', views.BasketItemList.as_view(), name='basket_items'),
-    path('basket/<int:pk>/', views.BasketItemDetails.as_view(), name='basket_item_details'),
+    path('basket/<int:article_pk>/', views.BasketItemDetails.as_view(), name='basket_item_details'),
 ]

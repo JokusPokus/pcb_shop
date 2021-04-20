@@ -117,6 +117,8 @@ class BasketItemList(generics.ListAPIView):
 class BasketItemDetails(generics.RetrieveDestroyAPIView):
     serializer_class = BasketItemSerializer
 
-    def get_queryset(self):
+    def get_object(self):
         user = self.request.user
-        return BasketItem.objects.filter(owner=user)
+        basket_items = BasketItem.objects.filter(owner=user)
+        article_pk = self.kwargs.get("article_pk")
+        return get_object_or_404(basket_items, article=article_pk)
