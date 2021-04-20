@@ -3,6 +3,21 @@ from django.core.exceptions import ValidationError
 from django.apps import apps
 
 
+class AttributeValidator:
+    """Validates a specific attribute configuration against the
+    currently offered board options.
+    """
+    def __init__(self):
+        self.offered_options = self._get_current_options()
+
+    @staticmethod
+    def _get_current_options():
+        """Returns the most up-to-date version of the internally offered board options."""
+        OfferedBoardOptions = apps.get_model('article', 'OfferedBoardOptions')
+        return OfferedBoardOptions.objects.first()
+
+
+
 class BoardOptionValidator:
     """Validates a set of internally offered board options
     against a set of externally available options.
