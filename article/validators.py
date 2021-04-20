@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 from django.core.exceptions import ValidationError
 from django.apps import apps
 
@@ -8,14 +8,58 @@ class AttributeValidator:
     currently offered board options.
     """
     def __init__(self):
-        self.offered_options = self._get_current_options()
+        self.offered_options: dict = self._get_current_options()
 
     @staticmethod
-    def _get_current_options():
+    def _get_current_options() -> dict:
         """Returns the most up-to-date version of the internally offered board options."""
         OfferedBoardOptions = apps.get_model('article', 'OfferedBoardOptions')
-        return OfferedBoardOptions.objects.first()
+        return OfferedBoardOptions.objects.first().attribute_options
 
+    @staticmethod
+    def _validate_choice(value: Union[str, int, float], offered_values: list, label: str) -> None:
+        if value not in offered_values:
+            raise ValidationError(
+                f"Choice '{value}' is not available for attribute '{label}'.",
+                code="out_of_choices"
+            )
+
+    @staticmethod
+    def _validate_range(value: Union[str, int, float], offered_values: dict, label: str) -> None:
+        if not offered_values["min"] <= value <= offered_values["max"]:
+            raise ValidationError(
+                f"'{value}' is not in available range for attribute '{label}'.",
+                code="out_of_range"
+            )
+
+    def _validate_attribute(self, label: str, value: Union[str, int, float]) -> None:
+        offered_attribute_options = self.offered_options.get(label)
+
+        if offered_attribute_options is None:
+            raise ValidationError(f"The '{label}' option is currently not offered.", code="option_not_offered")
+
+        offered_attribute_values = offered_attribute_options[label]
+
+        if "choices" in offered_attribute_values:
+            self._validate_choice(value, offered_attribute_values["choices"], label)
+
+        elif "range" in offered_attribute_values:
+            self._validate_range(value, offered_attribute_values["range"], label)
+
+        else:
+            raise ValidationError(f"""Currently offered board options for '{label}' are malformed. 
+No choices or range attribute is present.""")
+
+    def validate(self, attributes: dict) -> None:
+        """Raises ValidationError if any of the board attributes
+        is not valid against the currently offered options.
+
+        Returns None otherwise.
+        """
+        for label, value in attributes.items():
+            self._validate_attribute(label, value)
+
+        return None
 
 
 class BoardOptionValidator:
@@ -88,7 +132,7 @@ class BoardOptionValidator:
         return None
 
     def validate(self, options: dict) -> None:
-        """Raises BoardOptionError if any of the internal board options
+        """Raises ValidationError if any of the internal board options
         is not valid against the set of externally available options.
 
         Returns None otherwise.
