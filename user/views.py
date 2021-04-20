@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 
 from .models import User, BasketItem
 from .address_management import Address, disable_old_default, set_new_default
-from .serializers import UserSerializer, AddressSerializer
+from .serializers import UserSerializer, AddressSerializer, BasketItemSerializer
 
 
 class UserList(generics.ListAPIView):

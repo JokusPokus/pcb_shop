@@ -1,9 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.dispatch import receiver
+from django.apps import apps
+from django.db.models.signals import post_save
+
 
 from article.validators import validate_external_consistency
-from user.models import BasketItem
+
 # Let's set a default category ("Misc", for example)
 # that products can fall back to in the unlikely event that we delete a category.
 DEFAULT_CATEGORY = 1
@@ -67,6 +70,7 @@ def create_user_profile(sender, instance, created, **kwargs):
     a new User.
     """
     if created:
+        BasketItem = apps.get_model("user", "BasketItem")
         BasketItem.objects.create(article=instance, owner=instance.owner)
 
 

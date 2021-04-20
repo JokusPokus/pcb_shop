@@ -40,9 +40,9 @@ def save_user_profile(sender, instance, **kwargs):
 class BasketItem(models.Model):
     """Model for articles that are contained in a user's basket."""
     created = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
 
     class Meta:
         ordering = ['created']
-        unique_together = ['user', 'article']
+        unique_together = ['owner', 'article']
