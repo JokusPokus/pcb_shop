@@ -1,4 +1,6 @@
-from django.http import Http404
+from django.http import JsonResponse
+from django.core.validators import ValidationError
+
 
 from rest_framework import generics
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -53,11 +55,20 @@ class BoardOptions(generics.RetrieveAPIView):
     serializer_class = OfferedBoardOptionsSerializer
 
     def get_object(self):
-        board_options = OfferedBoardOptions.objects.first()
+        board_options = OfferedBoardOptions.objects.first().attribute_options
         validator = BoardOptionValidator()
-        try:
-            validator.validate(board_options)
-        except BoardOptionError:
-            raise Http404("We are currently maintaining our offer. Please try again later.")
-
+        validator.validate(board_options)
         return board_options
+
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            board_options = self.get_object()
+        except ValidationError:
+            return JsonResponse(
+                status=404,
+                data={"detail": "We are currently maintaining our offer. Please try again later."}
+            )
+        return JsonResponse(
+            status=200,
+            data=board_options
+        )
