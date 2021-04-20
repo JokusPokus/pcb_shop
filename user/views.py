@@ -106,6 +106,14 @@ def change_address_default(request):
     return JsonResponse(response_body)
 
 
+class BasketItemList(generics.ListAPIView):
+    serializer_class = BasketItemSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return BasketItem.objects.filter(owner=user)
+
+
 class BasketItemDetails(generics.RetrieveDestroyAPIView):
     serializer_class = BasketItemSerializer
 
