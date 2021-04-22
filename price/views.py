@@ -1,3 +1,5 @@
-from django.shortcuts import render
+from django.http import JsonResponse
 
-# Create your views here.
+from rest_framework import generics
+
+from .calculate_board_price import BoardPriceCalculator
