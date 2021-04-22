@@ -21,5 +21,6 @@ urlpatterns = [
     path('auth/', include('rest_auth.urls')),
     path('auth/registration/', include('rest_auth.registration.urls')),
     path('users/', include('user.urls', namespace='user')),
-    path('shop/', include('article.urls', namespace='shop'))
+    path('shop/', include('article.urls', namespace='shop')),
+    path('price-calculator/', include('price.urls', namespace='price')),
 ]
