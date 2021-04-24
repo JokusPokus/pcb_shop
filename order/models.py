@@ -82,7 +82,7 @@ def create_order_item(basket_item: BasketItem, order: Order, calculator: BoardPr
     unit_price = calculator.calculate_price(board_attrs)
     order_item = Article2Order(
         article=basket_item.article,
-        order=instance,
+        order=order,
         unit_price=unit_price,
         quantity=1
     )
@@ -97,8 +97,13 @@ def handle_order_items(sender, instance, created, **kwargs):
     if created:
         basket_items = BasketItem.objects.filter(owner=instance.user)
         calculator = BoardPriceCalculator()
+        item_list = []
 
         for basket_item in basket_items:
             order_item = create_order_item(basket_item, instance, calculator)
             order_item.save()
+            item_list.append(get_board_attrs(basket_item))
             basket_item.delete()
+
+        instance.items = item_list
+        instance.save()
