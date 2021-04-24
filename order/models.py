@@ -35,6 +35,7 @@ class PaymentState(models.Model):
 class Order(models.Model):
     """Model for Order"""
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    items = models.JSONField(null=True, blank=True)
     shipping_method = models.ForeignKey(ShippingMethod, on_delete=models.DO_NOTHING)
     shipping_address = models.ForeignKey(
         Address,
