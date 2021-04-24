@@ -1,7 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import User
-from article.models import Article
-from user.models import Address
+from django.dispatch import receiver
+from django.db.models.signals import post_save
+
+from article.models import Article, Board
+from user.models import Address, BasketItem
+from price.calculate_board_price import BoardPriceCalculator
 
 
 class ShippingMethod(models.Model):
@@ -61,3 +65,22 @@ class Article2Order(models.Model):
 
     class Meta:
         unique_together = ['order', 'article']
+
+
+@receiver(post_save, sender=Order)
+def handle_order_items(sender, instance, created, **kwargs):
+    if created:
+        basket_items = BasketItem.objects.filter(owner=instance.user)
+        calculator = BoardPriceCalculator()
+
+        for basket_item in basket_items:
+            board = Board.objects.get(pk=basket_item.article.pk)
+            unit_price = calculator.calculate_price(board.attributes)
+            order_item = Article2Order(
+                article=basket_item.article,
+                order=instance,
+                unit_price=unit_price,
+                quantity=1
+            )
+            order_item.save()
+            basket_item.delete()

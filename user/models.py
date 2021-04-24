@@ -43,7 +43,6 @@ class BasketItem(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
 
-
     class Meta:
         ordering = ['created']
         unique_together = ['owner', 'article']
