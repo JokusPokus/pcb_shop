@@ -1,4 +1,4 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 from django.core.validators import ValidationError
 
 from rest_framework import generics
