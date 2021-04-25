@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 
+from auditlog.registry import auditlog
+
 from article.models import Article, Board
 from user.models import Address, BasketItem
 from price.calculate_board_price import BoardPriceCalculator
@@ -107,3 +109,10 @@ def handle_order_items(sender, instance, created, **kwargs):
 
         instance.items = item_list
         instance.save()
+
+
+auditlog.register(ShippingMethod)
+auditlog.register(OrderState)
+auditlog.register(PaymentState)
+auditlog.register(Order)
+auditlog.register(Article2Order)

@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+from auditlog.registry import auditlog
+
 from article.models import Article
 from user.address_management import Address
 
@@ -46,3 +48,8 @@ class BasketItem(models.Model):
     class Meta:
         ordering = ['created']
         unique_together = ['owner', 'article']
+
+
+auditlog.register(User)
+auditlog.register(Profile)
+auditlog.register(BasketItem)

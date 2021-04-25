@@ -4,6 +4,7 @@ from django.dispatch import receiver
 from django.apps import apps
 from django.db.models.signals import post_save
 
+from auditlog.registry import auditlog
 
 from article.validators import validate_external_consistency
 
@@ -114,3 +115,11 @@ class ExternalBoardOptions(models.Model):
 
     def __str__(self):
         return f"<ExternalBoardOptions from shop '{self.external_shop.name}'>"
+
+
+auditlog.register(ArticleCategory)
+auditlog.register(Article)
+auditlog.register(Board)
+auditlog.register(ExternalShop)
+auditlog.register(OfferedBoardOptions)
+auditlog.register(ExternalBoardOptions)
