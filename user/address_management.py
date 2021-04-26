@@ -1,6 +1,8 @@
 from django.db import models
 from django.core.validators import MinLengthValidator
 
+from auditlog.registry import auditlog
+
 from .models import User
 
 
@@ -21,6 +23,8 @@ class Address(models.Model):
     is_shipping_default = models.BooleanField(default=False)
     is_billing_default = models.BooleanField(default=False)
 
+
+auditlog.register(Address)
 
 # UTILITY FUNCTIONS FOR ADDRESS API
 
