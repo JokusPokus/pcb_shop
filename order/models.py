@@ -119,6 +119,7 @@ def handle_order_items(sender, instance, created, **kwargs):
         instance.save()
 
 
+auditlog.register(ShippingProvider)
 auditlog.register(ShippingMethod)
 auditlog.register(OrderState)
 auditlog.register(PaymentState)
