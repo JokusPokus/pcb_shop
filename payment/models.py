@@ -5,8 +5,9 @@ from order.models import Order
 class PaymentMethod(models.Model):
     """Model for payment method."""
     created = models.DateTimeField(auto_now_add=True)
+    changed = models.DateTimeField(auto_now=True)
     name = models.CharField(max_length=100)
-    fee = models.FloatField()
+    fee = models.DecimalField(max_digits=6, decimal_places=2)
     sorter = models.PositiveIntegerField()
 
     class Meta:
