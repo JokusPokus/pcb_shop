@@ -10,32 +10,6 @@ from user.address_management import Address
 
 
 # **********
-# USERS
-# **********
-
-class Profile(models.Model):
-    """Extends the inbuilt User model to add more information about a User."""
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-
-
-@receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    """Ensures that a User Profile is created together with
-    a new User.
-    """
-    if created:
-        Profile.objects.create(user=instance)
-
-
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    """Ensures that a User's Profile is updated in the event
-    of a User update.
-    """
-    instance.profile.save()
-
-
-# **********
 # BASKET
 # **********
 
@@ -51,5 +25,4 @@ class BasketItem(models.Model):
 
 
 auditlog.register(User)
-auditlog.register(Profile)
 auditlog.register(BasketItem)

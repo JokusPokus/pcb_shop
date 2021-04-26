@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Profile, BasketItem
+from .models import User, BasketItem
 from .address_management import Address
 
 
@@ -13,18 +13,10 @@ class AddressSerializer(serializers.ModelSerializer):
         }
 
 
-class ProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Profile
-        exclude = ('id', 'user')
-
-
 class UserSerializer(serializers.ModelSerializer):
-    profile = ProfileSerializer()
-
     class Meta:
         model = User
-        fields = ('id', 'email', 'password', 'profile')
+        fields = ('id', 'email', 'password')
         depth = 2
         extra_kwargs = {
             'password': {'write_only': True}
