@@ -16,8 +16,10 @@ from user.address_management import Address
 class BasketItem(models.Model):
     """Model for articles that are contained in a user's basket."""
     created = models.DateTimeField(auto_now_add=True)
+    changed = models.DateTimeField(auto_now=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField()
 
     class Meta:
         ordering = ['created']
