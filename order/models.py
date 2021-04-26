@@ -58,8 +58,8 @@ class Order(models.Model):
         on_delete=models.DO_NOTHING,
         related_name='orders_billing'
     )
-    amount = models.FloatField()
-    vat = models.FloatField()
+    amount = models.DecimalField(max_digits=6, decimal_places=2)
+    vat = models.DecimalField(max_digits=6, decimal_places=2)
     order_state = models.ForeignKey(OrderState, on_delete=models.DO_NOTHING)
     payment_state = models.ForeignKey(PaymentState, on_delete=models.DO_NOTHING)
     created = models.DateTimeField(auto_now_add=True)
