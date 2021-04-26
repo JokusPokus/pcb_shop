@@ -10,9 +10,17 @@ from user.models import Address, BasketItem
 from price.calculate_board_price import BoardPriceCalculator
 
 
+class ShippingProvider(models.Model):
+    """Model for Shipping Provider"""
+    name = models.CharField(max_length=100)
+    country = models.CharField(max_length=100)
+    created = models.DateTimeField(auto_now_add=True)
+    changed = models.DateTimeField(auto_now=True)
+
+
 class ShippingMethod(models.Model):
     """Model for Shipping Method"""
-    name = models.CharField(max_length=100)
+    shipping_provider = models.ForeignKey(ShippingProvider, on_delete=models.CASCADE)
     price = models.FloatField()
     sorter = models.PositiveIntegerField()
     created = models.DateTimeField(auto_now_add=True)
