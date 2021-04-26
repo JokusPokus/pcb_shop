@@ -21,7 +21,7 @@ class ShippingProvider(models.Model):
 class ShippingMethod(models.Model):
     """Model for Shipping Method"""
     shipping_provider = models.ForeignKey(ShippingProvider, on_delete=models.CASCADE)
-    price = models.FloatField()
+    price = models.DecimalField(max_digits=6, decimal_places=2)
     sorter = models.PositiveIntegerField()
     created = models.DateTimeField(auto_now_add=True)
     changed = models.DateTimeField(auto_now=True)
@@ -47,6 +47,7 @@ class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     items = models.JSONField(null=True, blank=True)
     shipping_method = models.ForeignKey(ShippingMethod, on_delete=models.DO_NOTHING)
+    shipping_cost = models.DecimalField(max_digits=6, decimal_places=2)
     shipping_address = models.ForeignKey(
         Address,
         on_delete=models.DO_NOTHING,
@@ -57,19 +58,27 @@ class Order(models.Model):
         on_delete=models.DO_NOTHING,
         related_name='orders_billing'
     )
-    value = models.FloatField()
+    amount = models.FloatField()
     vat = models.FloatField()
     order_state = models.ForeignKey(OrderState, on_delete=models.DO_NOTHING)
     payment_state = models.ForeignKey(PaymentState, on_delete=models.DO_NOTHING)
     created = models.DateTimeField(auto_now_add=True)
     changed = models.DateTimeField(auto_now=True)
 
+    def save(self, *args, **kwargs):
+        """Ensured that shipping cost is equal to the current price
+        of the chosen shipping method.
+        """
+        if not self.shipping_cost:
+            self.shipping_cost = self.shipping_method.price
+        super(Order, self).save(*args, **kwargs)
+
 
 class Article2Order(models.Model):
     """Model for Article 2 Order"""
     article = models.ForeignKey(Article, on_delete=models.DO_NOTHING)
     order = models.ForeignKey(Order, on_delete=models.DO_NOTHING)
-    unit_price = models.FloatField()
+    unit_price = models.DecimalField(max_digits=6, decimal_places=2)
     quantity = models.IntegerField()
     created = models.DateTimeField(auto_now_add=True)
     changed = models.DateTimeField(auto_now=True)
