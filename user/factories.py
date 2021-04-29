@@ -1,8 +1,9 @@
 import factory
+from factory.django import DjangoModelFactory
 from .models import User, BasketItem
 
 
-class UserFactory(factory.django.DjangoModelFactory):
+class UserFactory(DjangoModelFactory):
     class Meta:
         model = User
 
@@ -14,5 +15,5 @@ class UserFactory(factory.django.DjangoModelFactory):
     is_active = True
 
 
-class BasketItemFactory(factory.django.DjangoModelFactory):
+class BasketItemFactory(DjangoModelFactory):
     pass

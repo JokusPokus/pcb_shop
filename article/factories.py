@@ -1,4 +1,5 @@
 import factory
+from factory.django import DjangoModelFactory
 from .models import Board, ExternalShop, ExternalBoardOptions, OfferedBoardOptions
 from .providers import BoardAttrsProvider
 from user.factories import UserFactory
@@ -7,7 +8,7 @@ from user.factories import UserFactory
 factory.Faker.add_provider(BoardAttrsProvider)
 
 
-class BoardFactory(factory.django.DjangoModelFactory):
+class BoardFactory(DjangoModelFactory):
     class Meta:
         model = Board
 
@@ -15,3 +16,12 @@ class BoardFactory(factory.django.DjangoModelFactory):
     gerberFileName = "gerberfile.zip"
     gerberHash = "iahriug3wh8w9rfhhueigjhhiwof"
     attributes = factory.Faker("board_attributes")
+
+
+class ExternalBoardOptionsFactory(DjangoModelFactory):
+    class Meta:
+        model = ExternalBoardOptions
+
+    external_shop = ExternalShop.objects.get(name="Example PCB Shop")
+    attribute_options = factory.Faker("attribute_options")
+
