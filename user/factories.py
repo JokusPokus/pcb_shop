@@ -7,6 +7,7 @@ class UserFactory(factory.django.DjangoModelFactory):
         model = User
 
     email = factory.Faker("email")
+    username = factory.SelfAttribute("email")
     password = factory.PostGenerationMethodCall('set_password', 'pcb_password')
     is_superuser = False
     is_staff = False
