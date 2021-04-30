@@ -24,5 +24,14 @@ class Command(BaseCommand):
             for _ in range(NUM_BOARDS_PER_USER):
                 BoardFactory(owner=user)
 
-            for _ in range(NUM_ADDRESSES_PER_USER):
+            for _ in range(NUM_ADDRESSES_PER_USER - 2):
                 AddressFactory(user=user)
+
+            default_shipping_address = AddressFactory(is_shipping_default=True)
+            default_billing_address = AddressFactory(is_billing_default=True)
+
+            OrderFactory(
+                user=user,
+                shipping_address=default_shipping_address,
+                billing_address=default_billing_address
+            )
