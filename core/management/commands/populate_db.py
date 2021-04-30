@@ -6,10 +6,10 @@ from article.factories import BoardFactory, ExternalBoardOptionsFactory, Offered
 from order.factories import OrderFactory
 
 
-NUM_USERS = 1
+NUM_USERS = 100
 NUM_BOARDS_PER_USER = 10
 NUM_ADDRESSES_PER_USER = 5
-NUM_OFFERED_BOARD_OPTIONS = 3
+NUM_OFFERED_BOARD_OPTIONS = 20
 
 
 class Command(BaseCommand):

@@ -98,6 +98,8 @@ class OfferedBoardOptions(models.Model):
         verbose_name = "Offered Board Options"
         verbose_name_plural = "Offered Board Options List"
 
+        indexes = [models.Index(fields=["-created"])]
+
     def __str__(self):
         return f"<OfferedBoardOptions created at {self.created}>"
 
@@ -112,6 +114,8 @@ class ExternalBoardOptions(models.Model):
         ordering = ['-created']
         verbose_name = "External Board Options"
         verbose_name_plural = "External Board Options List"
+
+        indexes = [models.Index(fields=["-created"])]
 
     def __str__(self):
         return f"<ExternalBoardOptions from shop '{self.external_shop.name}'>"
