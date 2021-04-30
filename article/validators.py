@@ -14,7 +14,7 @@ class AttributeValidator:
     def _get_current_options() -> dict:
         """Returns the most up-to-date version of the internally offered board options."""
         OfferedBoardOptions = apps.get_model('article', 'OfferedBoardOptions')
-        return OfferedBoardOptions.objects.first().attribute_options
+        return OfferedBoardOptions.objects.latest("created").attribute_options
 
     @staticmethod
     def _validate_choice(value: Union[str, int, float], offered_values: list, label: str) -> None:
@@ -75,7 +75,7 @@ class BoardOptionValidator:
         """Returns the most up-to-date version of the board options
         offered by self.shop.
         """
-        return self.shop.externalboardoptions_set.first().attribute_options
+        return self.shop.externalboardoptions_set.latest("created").attribute_options
 
     @staticmethod
     def _contains_choices(option_values):

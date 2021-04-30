@@ -6,25 +6,24 @@ from article.factories import BoardFactory, ExternalBoardOptionsFactory, Offered
 from order.factories import OrderFactory
 
 
-NUM_USERS = 100
+NUM_USERS = 1
 NUM_BOARDS_PER_USER = 10
 NUM_ADDRESSES_PER_USER = 5
+NUM_OFFERED_BOARD_OPTIONS = 3
 
 
 class Command(BaseCommand):
     help = "Populate database with fake data."
 
     @transaction.atomic
-    def handle(self, *args, **options):
-        self.stdout.write("Creating data...")
-
-        for _ in range(NUM_USERS):
+    def create_user_data(self, num_users: int, num_boards_per_user: int, num_addresses_per_user: int):
+        for _ in range(num_users):
             user = UserFactory()
 
-            for _ in range(NUM_BOARDS_PER_USER):
+            for _ in range(num_boards_per_user):
                 BoardFactory(owner=user)
 
-            for _ in range(NUM_ADDRESSES_PER_USER - 2):
+            for _ in range(num_addresses_per_user - 2):
                 AddressFactory(user=user)
 
             default_shipping_address = AddressFactory(is_shipping_default=True)
@@ -35,3 +34,14 @@ class Command(BaseCommand):
                 shipping_address=default_shipping_address,
                 billing_address=default_billing_address
             )
+
+    def handle(self, *args, **options):
+        self.stdout.write(f"Creating data for {NUM_USERS} users...")
+        self.create_user_data(NUM_USERS, NUM_BOARDS_PER_USER, NUM_ADDRESSES_PER_USER)
+        self.stdout.write(f"Creating data for {NUM_OFFERED_BOARD_OPTIONS} offered board options...")
+
+        for _ in range(NUM_OFFERED_BOARD_OPTIONS):
+            OfferedBoardOptionsFactory()
+            ExternalBoardOptionsFactory()
+
+        self.stdout.write("Done")
