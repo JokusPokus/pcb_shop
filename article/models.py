@@ -66,9 +66,9 @@ class Board(Article):
 
 
 @receiver(post_save, sender=Board)
-def create_user_profile(sender, instance, created, **kwargs):
-    """Ensures that a User Profile is created together with
-    a new User.
+def create_basket_item(sender, instance, created, **kwargs):
+    """Ensures that a created Board is automatically stored
+    in the user's basket.
     """
     if created:
         BasketItem = apps.get_model("user", "BasketItem")
