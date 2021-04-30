@@ -14,6 +14,7 @@ Django==3.1.6
 django-allauth==0.44.0
 django-auditlog==1.0a1
 django-jsonfield==1.4.1
+django-postgres-metrics==0.10.1
 django-rest-auth==0.9.5
 djangorestframework==3.12.2
 factory-boy==3.2.0

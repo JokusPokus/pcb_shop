@@ -47,7 +47,7 @@ class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     items = models.JSONField(null=True, blank=True)
     shipping_method = models.ForeignKey(ShippingMethod, on_delete=models.DO_NOTHING)
-    shipping_cost = models.DecimalField(max_digits=6, decimal_places=2)
+    shipping_cost = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
     shipping_address = models.ForeignKey(
         Address,
         on_delete=models.DO_NOTHING,
