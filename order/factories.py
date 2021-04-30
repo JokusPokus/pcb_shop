@@ -1,7 +1,7 @@
 import factory
 from factory.django import DjangoModelFactory
 from .models import Order, Article2Order, ShippingMethod, OrderState, PaymentState
-from user.factories import UserFactory
+from user.factories import UserFactory, AddressFactory
 
 
 class OrderFactory(DjangoModelFactory):
@@ -9,9 +9,9 @@ class OrderFactory(DjangoModelFactory):
         model = Order
 
     user = factory.SubFactory(UserFactory)
-    items = factory.Faker("dict")
+    items = factory.Faker("json")
     shipping_method = ShippingMethod.objects.get(pk=1)
-    shipping_cost = factory.SelfAttribute("shipping_method__price")
+    shipping_cost = factory.SelfAttribute("shipping_method.price")
     shipping_address = factory.SubFactory(AddressFactory)
     billing_address = factory.SubFactory(AddressFactory)
     amount = 15.99
