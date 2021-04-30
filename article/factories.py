@@ -25,3 +25,9 @@ class ExternalBoardOptionsFactory(DjangoModelFactory):
     external_shop = ExternalShop.objects.get(name="Example PCB Shop")
     attribute_options = factory.Faker("attribute_options")
 
+
+class OfferedBoardOptionsFactory(DjangoModelFactory):
+    class Meta:
+        model = OfferedBoardOptions
+
+    attribute_options = factory.Faker("attribute_options")
