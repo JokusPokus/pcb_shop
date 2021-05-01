@@ -36,6 +36,15 @@ class Command(BaseCommand):
             )
 
     def handle(self, *args, **options):
+        self.stdout.write("Creating superuser 'schmi' (schmitt@gmail.com) with password 'pcb_password'")
+        UserFactory(
+            username="schmi",
+            email="schmitt@gmail.com",
+            password="pcb_password",
+            is_superuser=True,
+            is_staff=True
+        )
+
         self.stdout.write(f"Creating data for {NUM_USERS} users...")
         self.create_user_data(NUM_USERS, NUM_BOARDS_PER_USER, NUM_ADDRESSES_PER_USER)
         self.stdout.write(f"Creating data for {NUM_OFFERED_BOARD_OPTIONS} offered board options...")
