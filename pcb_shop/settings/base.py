@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
 
     'auditlog',
+    'dbbackup'
 ]
 
 MIDDLEWARE = [
@@ -122,7 +123,8 @@ TEMPLATES = [
 WSGI_APPLICATION = 'pcb_shop.wsgi.application'
 
 
-
+DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
+DBBACKUP_STORAGE_OPTIONS = {'location': BASE_DIR / 'db_backups/'}
 
 
 # Password validation

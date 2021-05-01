@@ -131,3 +131,6 @@ dmypy.json
 pcb_shop/settings/dev.py
 
 *.exe
+
+# Database backups
+db_backups
