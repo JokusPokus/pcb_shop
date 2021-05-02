@@ -128,10 +128,10 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-src/pcb_shop/settings/dev.py
-
 *.exe
 
 # Database backups
 db_backups/*
 !db_backups/.gitkeep
+
+data/
