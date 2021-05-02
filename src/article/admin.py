@@ -1,5 +1,5 @@
 from django.contrib import admin
-from . import (
+from .models import (
     Article,
     ArticleCategory,
     Board,

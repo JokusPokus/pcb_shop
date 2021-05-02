@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 
 from auditlog.registry import auditlog
 
-from src.article.models import Article
+from article.models import Article
 
 
 # **********

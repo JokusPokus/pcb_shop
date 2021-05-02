@@ -2,7 +2,7 @@ import factory
 from factory.django import DjangoModelFactory
 from .models import Board, ExternalShop, ExternalBoardOptions, OfferedBoardOptions
 from .providers import BoardAttrsProvider
-from src.user.factories import UserFactory
+from user.factories import UserFactory
 
 
 factory.Faker.add_provider(BoardAttrsProvider)

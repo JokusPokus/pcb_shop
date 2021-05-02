@@ -1,7 +1,7 @@
 import factory
 from factory.django import DjangoModelFactory
 from .models import Order, ShippingMethod, OrderState, PaymentState
-from src.user.factories import UserFactory, AddressFactory
+from user.factories import UserFactory, AddressFactory
 
 
 class OrderFactory(DjangoModelFactory):

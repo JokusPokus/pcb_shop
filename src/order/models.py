@@ -5,9 +5,10 @@ from django.db.models.signals import post_save
 
 from auditlog.registry import auditlog
 
-from src.article.models import Article, Board
-from src.user.models import Address, BasketItem
-from src.price.calculate_board_price import BoardPriceCalculator
+from article.models import Article, Board
+from user.models import BasketItem
+from user.address_management import Address
+from price.calculate_board_price import BoardPriceCalculator
 
 
 class ShippingProvider(models.Model):

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from src.order.models import Order, OrderState, PaymentState, Article2Order, ShippingMethod, ShippingProvider
+from order.models import Order, OrderState, PaymentState, Article2Order, ShippingMethod, ShippingProvider
 
 admin.site.register(Order)
 admin.site.register(OrderState)

@@ -1,9 +1,9 @@
 from django.db import transaction
 from django.core.management.base import BaseCommand
 
-from src.user.factories import UserFactory, AddressFactory
-from src.article.factories import BoardFactory, ExternalBoardOptionsFactory, OfferedBoardOptionsFactory
-from src.order.factories import OrderFactory
+from user.factories import UserFactory, AddressFactory
+from article.factories import BoardFactory, ExternalBoardOptionsFactory, OfferedBoardOptionsFactory
+from order.factories import OrderFactory
 
 
 NUM_USERS = 100
