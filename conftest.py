@@ -3,8 +3,7 @@ import pytest
 from typing import Callable, Optional
 from django.test import Client
 
-from user.models import User
-from article.models import ArticleCategory
+from pcb_shop.user.models import User
 
 
 @pytest.fixture

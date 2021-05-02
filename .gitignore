@@ -128,7 +128,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-pcb_shop/settings/dev.py
+pcb_shop/pcb_shop/settings/dev.py
 
 *.exe
 
