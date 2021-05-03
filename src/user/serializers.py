@@ -7,10 +7,7 @@ class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
         fields = '__all__'
-        read_only_fields = ('is_billing_default', 'is_shipping_default')
-        extra_kwargs = {
-            'user_id': {'write_only': True}
-        }
+        read_only_fields = ('is_billing_default', 'is_shipping_default', 'user')
 
 
 class UserSerializer(serializers.ModelSerializer):

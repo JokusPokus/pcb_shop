@@ -11,6 +11,10 @@ NUM_BOARDS_PER_USER = 10
 NUM_ADDRESSES_PER_USER = 5
 NUM_OFFERED_BOARD_OPTIONS = 20
 
+ADMIN_NAME = "admin"
+ADMIN_EMAIL = "admin@gmail.com"
+ADMIN_PASSWORD = "pcb_password"
+
 
 class Command(BaseCommand):
     help = "Populate database with fake data."
@@ -36,11 +40,11 @@ class Command(BaseCommand):
             )
 
     def handle(self, *args, **options):
-        self.stdout.write("Creating superuser 'schmi' (schmitt@gmail.com) with password 'pcb_password'")
+        self.stdout.write(f"Creating superuser '{ADMIN_NAME}' ({ADMIN_EMAIL}) with password '{ADMIN_PASSWORD}'")
         UserFactory(
-            username="schmi",
-            email="schmitt@gmail.com",
-            password="pcb_password",
+            username=ADMIN_NAME,
+            email=ADMIN_EMAIL,
+            password=ADMIN_PASSWORD,
             is_superuser=True,
             is_staff=True
         )

@@ -11,13 +11,6 @@ from .address_management import Address, disable_old_default, set_new_default
 from .serializers import UserSerializer, AddressSerializer, BasketItemSerializer
 
 
-class UserList(generics.ListAPIView):
-    """GET: Lists all registered users."""
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = [IsAdminUser]
-
-
 class UserDetails(generics.RetrieveDestroyAPIView):
     """GET: Returns details for current user.
 
@@ -33,8 +26,8 @@ class UserDetails(generics.RetrieveDestroyAPIView):
 
 
 class AddressList(generics.ListCreateAPIView):
-    """GET: Returns list of current user's addresses. If query parameters is_billing_default
-    or is_shipping_default (not both at the same time) are added with the value "true",
+    """GET: Returns list of current user's addresses. If query parameters isBillingDefault
+    or isShippingDefault (not both at the same time) are added with the value "true",
     the respective default address is returned.
 
     POST: Saves new address to the database.
@@ -52,16 +45,13 @@ class AddressList(generics.ListCreateAPIView):
             if self.request.query_params.get(f"is{address_type.capitalize()}Default") == "true":
 
                 default_address = current_user.addresses.filter(**{f"is_{address_type}_default": True})
-                if not default_address:
-                    return JsonResponse(status=404, data={"Error": f"User has no default {address_type} address"})
-
                 return default_address
 
         return current_user.addresses.all()
 
     def perform_create(self, serializer):
         """Assures that a new address is saved with the calling user as owner."""
-        serializer.save(user_id=self.request.user)
+        serializer.save(user=self.request.user)
 
 
 class AddressDetails(generics.RetrieveUpdateDestroyAPIView):
