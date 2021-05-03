@@ -24,5 +24,5 @@ urlpatterns = [
     path('users/', include('user.urls', namespace='user')),
     path('shop/', include('article.urls', namespace='shop')),
     path('shop/', include('order.urls', namespace='order')),
-    path('price-calculator/', include('price.urls', namespace='price')),
+    path('calculate-price/', include('price.urls', namespace='price')),
 ]
