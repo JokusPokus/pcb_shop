@@ -11,5 +11,8 @@ class OrderSerializer(serializers.ModelSerializer):
             "payment_state",
             "user",
             "value",
-            "vat"
+            "vat",
+            "amount",
+            "shipping_cost",
+            "items"
         ]
