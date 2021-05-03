@@ -67,7 +67,7 @@ class BoardOptionValidator:
     def __init__(self, shop: Optional[str] = None):
         if shop is None:
             ExternalShop = apps.get_model('article', 'ExternalShop')
-            shop = ExternalShop.objects.get(name="JLCPCB")
+            shop = ExternalShop.objects.get(name="Example PCB Shop")
         self.shop = shop
         self.external_options = self._get_external_options()
 
