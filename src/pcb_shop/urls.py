@@ -46,4 +46,5 @@ urlpatterns = [
     path('shop/', include('article.urls', namespace='shop')),
     path('shop/', include('order.urls', namespace='order')),
     path('calculate-price/', include('price.urls', namespace='price')),
+    path('__debug__/', include(debug_toolbar.urls)),
 ]
