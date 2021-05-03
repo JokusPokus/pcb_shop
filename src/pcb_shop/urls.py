@@ -21,7 +21,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include('rest_auth.urls')),
     path('auth/registration/', include('rest_auth.registration.urls')),
-    path('users/', include('user.urls', namespace='user')),
+    path('', include('user.urls', namespace='user')),
     path('shop/', include('article.urls', namespace='shop')),
     path('shop/', include('order.urls', namespace='order')),
     path('calculate-price/', include('price.urls', namespace='price')),
