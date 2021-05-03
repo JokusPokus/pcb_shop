@@ -62,7 +62,8 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
 
     'auditlog',
-    'dbbackup'
+    'dbbackup',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
