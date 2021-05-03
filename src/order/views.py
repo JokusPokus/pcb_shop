@@ -15,12 +15,12 @@ class OrderList(generics.ListCreateAPIView):
         order_state = OrderState.objects.get(name="received")
         payment_state = PaymentState.objects.get(name="pending")
         user = self.request.user
-        value = 15.99
+        amount = 15.99
         vat = 1.12
         serializer.save(
             order_state=order_state,
             payment_state=payment_state,
             user=user,
-            value=value,
+            amount=amount,
             vat=vat,
         )
