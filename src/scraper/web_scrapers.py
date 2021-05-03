@@ -152,5 +152,4 @@ class JLCCrawler(Crawler):
 
 if __name__ == "__main__":
     crawler = JLCCrawler()
-    crawler.show_option_divs()
     pprint(crawler.get_board_options())
