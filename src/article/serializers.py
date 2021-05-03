@@ -20,6 +20,7 @@ class BoardSerializer(serializers.ModelSerializer):
     class Meta:
         model = Board
         fields = "__all__"
+        read_only_fields = ["gerberFileName", "gerberHash"]
 
 
 class OfferedBoardOptionsSerializer(serializers.ModelSerializer):

@@ -29,7 +29,14 @@ class BoardList(generics.ListCreateAPIView):
         and the calling user as owner.
         """
         category = ArticleCategory.objects.get(name="PCB")
-        serializer.save(owner=self.request.user, category=category)
+        gerberFileName = "gerber.zip"
+        gerberHash = "ju4tz498zosehfoish389h94hg9hshg"
+        serializer.save(
+            owner=self.request.user,
+            category=category,
+            gerberFileName=gerberFileName,
+            gerberHash=gerberHash
+        )
 
 
 class BoardDetails(generics.RetrieveAPIView):
