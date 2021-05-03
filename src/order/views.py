@@ -5,6 +5,12 @@ from .models import Order, OrderState, PaymentState
 
 
 class OrderList(generics.ListCreateAPIView):
+    """GET: Returns a list of all orders the current user has made.
+
+    POST: Accepts a shipping method, a billing and a shipping address
+    and creates an order with all the items present in the current user's
+    shopping basket.
+    """
     serializer_class = OrderSerializer
 
     def get_queryset(self):
