@@ -97,6 +97,7 @@ def change_address_default(request):
 
 
 class BasketItemList(generics.ListAPIView):
+    """Retrieve a list of all items present in the current user's basket."""
     serializer_class = BasketItemSerializer
 
     def get_queryset(self):
@@ -105,6 +106,7 @@ class BasketItemList(generics.ListAPIView):
 
 
 class BasketItemDetails(generics.RetrieveDestroyAPIView):
+    """Retrieve details of the current user's basket item specified by its ID."""
     serializer_class = BasketItemSerializer
 
     def get_object(self):
