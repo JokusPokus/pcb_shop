@@ -5,6 +5,7 @@ from django.urls import reverse
 from . import VALID_ADDRESS, OTHER_VALID_ADDRESS
 
 from user.address_management import Address
+from user.factories import AddressFactory
 
 
 @pytest.mark.django_db
@@ -81,7 +82,32 @@ class TestAddressCreationFailure:
 
 @pytest.mark.django_db
 class TestAddressListSuccess:
-    pass
+    def test_only_owned_addresses_are_listed(self, authenticated_client, user, other_user):
+        """GIVEN an authenticated user with several existing addresses
+
+        WHEN the user requests a list of her addresses
+
+        THEN all her addresses are present, but none of the addresses
+        not owned by her.
+        """
+        owned_address_ids = set()
+
+        NUM_OWNED_ADDRESSES = 3
+        for _ in range(NUM_OWNED_ADDRESSES):
+            address = AddressFactory(user=user)
+            owned_address_ids.add(address.id)
+
+        NUM_NON_OWNED_ADDRESSES = 3
+        for _ in range(NUM_NON_OWNED_ADDRESSES):
+            AddressFactory(user=other_user)
+
+        response = authenticated_client.get(path=reverse("user:address_list"))
+        assert response.status_code == 200
+
+        # Returned addresses contain owned addresses but not non-owned addresses
+        response_body = response.json()
+        returned_address_ids = {address["id"] for address in response_body}
+        assert owned_address_ids == returned_address_ids
 
 
 @pytest.mark.django_db
