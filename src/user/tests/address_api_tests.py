@@ -111,32 +111,35 @@ class TestAddressUpdateSuccess:
         THEN the correct Http response is returned and the address is
         updated in the database.
         """
-        creation_response = authenticated_client.post(path=reverse("user:address_list"), data=VALID_ADDRESS)
-        address_id = creation_response.json()["id"]
+        address = Address.objects.create(user=user, **VALID_ADDRESS)
 
         UPDATED_ZIP_CODE = "12345"
-        address_data = {**VALID_ADDRESS, "zip_code": UPDATED_ZIP_CODE}
+        updated_address_data = {**VALID_ADDRESS, "zip_code": UPDATED_ZIP_CODE}
 
-        update_response = authenticated_client.patch(
-            path=reverse("user:address_details", args=[address_id]),
-            data=address_data,
+        response = authenticated_client.patch(
+            path=reverse("user:address_details", args=[address.id]),
+            data=updated_address_data,
             content_type='application/json'
         )
-        assert update_response.status_code == 200
+        assert response.status_code == 200
         assert user.addresses.get(id=address_id).zip_code == UPDATED_ZIP_CODE
 
 
 @pytest.mark.django_db
 class TestAddressUpdateFailure:
-    def test_updating_non_existing_address_throws_404(self, update_address):
+    def test_updating_non_existing_address_throws_404(self, authenticated_client):
         """GIVEN an authenticated user
 
         WHEN the user tries to update a non-existing address
 
         THEN the correct Http error code is returned.
         """
-        ADDRESS_ID = 9999  # does not exist
-        response = update_address(ADDRESS_ID, street="Beispielstraße")
+        NON_EXISTING_ADDRESS_ID = 9999
+        response = authenticated_client.patch(
+            path=reverse("user:address_details", args=[NON_EXISTING_ADDRESS_ID]),
+            data=VALID_ADDRESS,
+            content_type='application/json'
+        )
         assert response.status_code == 404
 
     @pytest.mark.parametrize("invalid_field", [
@@ -145,31 +148,38 @@ class TestAddressUpdateFailure:
         (pytest.param({"receiver_first_name": "a" * 100}, id="Name too long")),
         (pytest.param({"house_number": "1000000 c"}, id="House number too long"))
     ])
-    def test_updating_address_with_invalid_data_throws_error(self, invalid_field, create_address, update_address):
+    def test_updating_address_with_invalid_data_throws_error(self, invalid_field, authenticated_client):
         """GIVEN an authenticated user
 
         WHEN the user tries to update an existing address with invalid data
 
         THEN the correct Http error code is returned.
         """
-        create_response = create_address()
-        address_id = create_response.json()["id"]
+        address = Address.objects.create(user=user, **VALID_ADDRESS)
+        invalid_address_update = {**VALID_ADDRESS, **invalid_field}
 
-        update_response = update_address(address_id, **update_dict)
-        assert update_response.status_code == 400
+        response = authenticated_client.patch(
+            path=reverse("user:address_details", args=[address.id]),
+            data=invalid_address_update,
+            content_type='application/json'
+        )
+        assert response.status_code == 400
 
-    def test_anonymous_user_cannot_update_address(self, create_address, update_address, client):
+    def test_anonymous_user_cannot_update_address(self, client):
         """GIVEN an anonymous user
 
         WHEN the user tries to update an existing address
 
-        THEN permission is denied and the correct Http error code is returned.
+        THEN permission is denied and the correct HTTP error code is returned.
         """
-        create_response = create_address()
-        address_id = create_response.json()["id"]
-
-        update_response = update_address(address_id, anonymous=True, zip_code="12345")
-        assert update_response.status_code == 403
+        address = Address.objects.create(user=user, **VALID_ADDRESS)
+        updated_address_data = {**VALID_ADDRESS, "zip_code": "12345"}
+        response = client.patch(
+            path=reverse("user:address_details", args=[address.id]),
+            data=updated_address_data,
+            content_type='application/json'
+        )
+        assert response.status_code == 403
 
 
 @pytest.mark.django_db
