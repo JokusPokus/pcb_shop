@@ -2,7 +2,7 @@ import pytest
 
 from django.urls import reverse
 
-from . import VALID_ADDRESS, OTHER_VALID_ADDRESS, INVALID_ADDRESS_FIELDS
+from . import VALID_ADDRESS, OTHER_VALID_ADDRESS
 
 from user.address_management import Address
 
@@ -103,31 +103,26 @@ class TestAddressListFailure:
 
 @pytest.mark.django_db
 class TestAddressUpdateSuccess:
-    def test_correct_http_response_upon_success(self, create_address, update_address):
+    def test_correct_http_response_and_db_update(self, authenticated_client, user):
         """GIVEN an authenticated user with an existing address
 
         WHEN the user updates a part of that address
 
-        THEN the correct Http response is returned.
+        THEN the correct Http response is returned and the address is
+        updated in the database.
         """
-        create_response = create_address()
-        address_id = create_response.json()["id"]
-
-        update_response = update_address(address_id, zip_code="12345")
-        assert update_response.status_code == 200
-
-    def test_address_is_updated_in_db(self, create_address, update_address, user):
-        """GIVEN an authenticated user with an existing address
-
-        WHEN the user updates a part of that address
-
-        THEN the address is correctly updated in the database.
-        """
-        response = create_address()
-        address_id = response.json()["id"]
+        creation_response = authenticated_client.post(path=reverse("user:address_list"), data=VALID_ADDRESS)
+        address_id = creation_response.json()["id"]
 
         UPDATED_ZIP_CODE = "12345"
-        update_address(address_id, zip_code=UPDATED_ZIP_CODE)
+        address_data = {**VALID_ADDRESS, "zip_code": UPDATED_ZIP_CODE}
+
+        update_response = authenticated_client.patch(
+            path=reverse("user:address_details", args=[address_id]),
+            data=address_data,
+            content_type='application/json'
+        )
+        assert update_response.status_code == 200
         assert user.addresses.get(id=address_id).zip_code == UPDATED_ZIP_CODE
 
 
@@ -144,8 +139,13 @@ class TestAddressUpdateFailure:
         response = update_address(ADDRESS_ID, street="Beispielstraße")
         assert response.status_code == 404
 
-    @pytest.mark.parametrize("update_dict", INVALID_ADDRESS_FIELDS)
-    def test_updating_address_with_invalid_data_throws_error(self, update_dict, create_address, update_address):
+    @pytest.mark.parametrize("invalid_field", [
+        (pytest.param({"zip_code": "1234"}, id="Zip too short")),
+        (pytest.param({"zip_code": "123456"}, id="Zip too long")),
+        (pytest.param({"receiver_first_name": "a" * 100}, id="Name too long")),
+        (pytest.param({"house_number": "1000000 c"}, id="House number too long"))
+    ])
+    def test_updating_address_with_invalid_data_throws_error(self, invalid_field, create_address, update_address):
         """GIVEN an authenticated user
 
         WHEN the user tries to update an existing address with invalid data
