@@ -122,7 +122,7 @@ class TestAddressUpdateSuccess:
             content_type='application/json'
         )
         assert response.status_code == 200
-        assert user.addresses.get(id=address_id).zip_code == UPDATED_ZIP_CODE
+        assert user.addresses.get(id=address.id).zip_code == UPDATED_ZIP_CODE
 
 
 @pytest.mark.django_db
