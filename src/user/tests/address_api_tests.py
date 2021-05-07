@@ -278,66 +278,53 @@ class TestAddressDefaultChangeSuccess:
 @pytest.mark.django_db
 class TestAddressDefaultChangeFailure:
     @pytest.mark.parametrize("address_type", ["shipping", "billing"])
-    def test_non_existing_address_as_default_throws_404(self, address_type, set_as_default):
+    def test_handle_non_existing_address_as_default(self, address_type, authenticated_client, user):
         """GIVEN an authenticated user
 
         WHEN the user tries to set an address that does not exist
         as her new shipping or billing default address
 
-        THEN the correct error is thrown."""
-        ADDRESS_ID = 9999  # does not exist
-        response = set_as_default(address_type, ADDRESS_ID)
+        THEN the correct error is thrown and the old default
+        is not affected."""
+        default_address = Address.objects.create(
+            user=user,
+            is_shipping_default=True,
+            is_billing_default=True,
+            **OTHER_VALID_ADDRESS
+        )
+
+        # Try to change default to non-existing address
+        NON_EXISTING_ADDRESS_ID = 9999
+        url = reverse("user:change_address_default") + f"?address-id={NON_EXISTING_ADDRESS_ID}&type={address_type}"
+        response = authenticated_client.get(path=url)
         assert response.status_code == 404
 
-        response_body = response.json()
-        assert response_body.get("Error") == "Address does not exist for this user."
+        # Old default is not affected
+        assert getattr(default_address, f"is_{address_type}_default")
 
     @pytest.mark.parametrize("address_type", ["shipping", "billing"])
-    def test_address_id_not_owned_by_user_throws_404(
-            self,
-            address_type,
-            client,
-            other_user,
-            create_address,
-            set_as_default
-    ):
+    def test_address_id_not_owned_by_user_throws_404(self, address_type, authenticated_client, user, other_user):
         """GIVEN an authenticated user
 
         WHEN the user tries to set an address owned by a different user
         as her new shipping or billing default address
 
-        THEN the correct error is thrown."""
-        # First user creates address
-        create_response = create_address(VALID_ADDRESS)
-        address_id = create_response.json()["id"]
+        THEN the correct error is thrown and the old default is
+        not affected."""
+        default_address = Address.objects.create(
+            user=user,
+            is_shipping_default=True,
+            is_billing_default=True,
+            **OTHER_VALID_ADDRESS
+        )
 
-        # Different user tries to set that address as default
-        client.logout()
-        client.force_login(other_user)
+        # Create address not owned by user of interest
+        non_owned_address = Address.objects.create(user=other_user, **VALID_ADDRESS)
 
-        response = set_as_default(address_type, address_id)
+        # Try to change default to non-owned address via API
+        url = reverse("user:change_address_default") + f"?address-id={non_owned_address.id}&type={address_type}"
+        response = authenticated_client.get(path=url)
         assert response.status_code == 404
 
-    @pytest.mark.parametrize("address_type", ["shipping", "billing"])
-    def test_bad_address_id_does_not_affect_current_default(
-            self,
-            address_type,
-            create_and_set_as_default,
-            set_as_default,
-            user
-    ):
-        """GIVEN an authenticated user
-
-        WHEN the user tries to set an address that he does not own
-        or that does not exist as her new shipping or billing default address
-
-        THEN this does not affect the current default address."""
-        create_and_set_as_default(address_type, VALID_ADDRESS)
-
-        # Try to change default to non existing address
-        ADDRESS_ID = 9999
-        set_as_default(address_type, ADDRESS_ID)
-
-        # First address should still be the default
-        expected_default_address = user.addresses.get(**VALID_ADDRESS)
-        assert getattr(expected_default_address, f"is_{address_type}_default")
+        # Old default is not affected
+        assert getattr(default_address, f"is_{address_type}_default")
