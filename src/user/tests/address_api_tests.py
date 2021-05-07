@@ -1,5 +1,7 @@
 import pytest
 
+from django.urls import reverse
+
 from . import VALID_ADDRESS, OTHER_VALID_ADDRESS, INVALID_ADDRESS_FIELDS
 
 from user.address_management import Address
@@ -7,7 +9,7 @@ from user.address_management import Address
 
 @pytest.mark.django_db
 class TestAddressCreationSuccess:
-    def test_correct_http_response(self, client):
+    def test_correct_http_response(self, authenticated_client):
         """GIVEN valid address and an authenticated user
 
         WHEN that user tries to save the address
@@ -15,14 +17,15 @@ class TestAddressCreationSuccess:
         THEN a 201 status code and the correct address data
         with default settings set to false is returned.
         """
-        response = client.post(path=reverse("address_list"), data=VALID_ADDRESS)
+        response = authenticated_client.post(path=reverse("user:address_list"), data=VALID_ADDRESS)
+        print(response.json())
         assert response.status_code == 201
 
         response_body = response.json()
         assert response_body["is_shipping_default"] is False
         assert response_body["is_billing_default"] is False
 
-    def test_address_inserted_into_db(self, client, user):
+    def test_address_inserted_into_db(self, authenticated_client, user):
         """GIVEN valid address data and an authenticated user
 
         WHEN that user tries to save the address
@@ -30,7 +33,7 @@ class TestAddressCreationSuccess:
         THEN the address is inserted into the database
         and linked to the user, with defaults set to false.
         """
-        response = client.post(path=reverse("address_list"), data=VALID_ADDRESS)
+        response = authenticated_client.post(path=reverse("user:address_list"), data=VALID_ADDRESS)
         address_id = response.json()["id"]
         assert user.addresses.filter(id=address_id, **VALID_ADDRESS).exists()
 

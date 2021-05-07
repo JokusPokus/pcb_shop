@@ -3,7 +3,7 @@ from typing import List
 
 from django.urls import reverse
 
-from src.article import Board
+from article.models import Board
 
 from .conftest import VALID_BOARD_DATA
 

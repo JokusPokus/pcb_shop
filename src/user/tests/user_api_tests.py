@@ -2,7 +2,7 @@ import pytest
 
 from django.urls import reverse
 
-from src.user.models import User
+from user.models import User
 
 
 @pytest.mark.django_db

@@ -3,7 +3,7 @@ import pytest
 from typing import Callable, Optional
 from django.test import Client
 
-from src.user.models import User
+from user.models import User
 
 
 @pytest.fixture
