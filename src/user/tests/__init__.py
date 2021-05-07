@@ -24,3 +24,10 @@ VALID_CREDENTIALS = {
     "password1": "SuperStrongPassword",
     "password2": "SuperStrongPassword"
 }
+
+INVALID_ADDRESS_FIELDS = [
+    (pytest.param({"zip_code": "1234"}, id="Zip too short")),
+    (pytest.param({"zip_code": "123456"}, id="Zip too long")),
+    (pytest.param({"receiver_first_name": "a" * 100}, id="Name too long")),
+    (pytest.param({"house_number": "1000000 c"}, id="House number too long"))
+]

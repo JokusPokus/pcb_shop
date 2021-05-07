@@ -2,7 +2,7 @@ import pytest
 
 from django.urls import reverse
 
-from . import VALID_ADDRESS_DATA, OTHER_VALID_ADDRESS
+from . import VALID_ADDRESS_DATA, OTHER_VALID_ADDRESS, INVALID_ADDRESS_FIELDS
 
 from user.address_management import Address
 from user.factories import AddressFactory
@@ -61,12 +61,7 @@ class TestAddressCreationFailure:
         assert response.status_code == 400
         assert not Address.objects.filter(**address_data).exists()
 
-    @pytest.mark.parametrize("invalid_field", [
-        (pytest.param({"zip_code": "1234"}, id="Zip too short")),
-        (pytest.param({"zip_code": "123456"}, id="Zip too long")),
-        (pytest.param({"receiver_first_name": "a" * 100}, id="Name too long")),
-        (pytest.param({"house_number": "1000000 c"}, id="House number too long"))
-    ])
+    @pytest.mark.parametrize("invalid_field", INVALID_ADDRESS_FIELDS)
     def test_invalid_address_field_throws_error(self, invalid_field, authenticated_client):
         """GIVEN an authenticated user
 
@@ -176,12 +171,7 @@ class TestAddressUpdateFailure:
         )
         assert response.status_code == 404
 
-    @pytest.mark.parametrize("invalid_field", [
-        (pytest.param({"zip_code": "1234"}, id="Zip too short")),
-        (pytest.param({"zip_code": "123456"}, id="Zip too long")),
-        (pytest.param({"receiver_first_name": "a" * 100}, id="Name too long")),
-        (pytest.param({"house_number": "1000000 c"}, id="House number too long"))
-    ])
+    @pytest.mark.parametrize("invalid_field", INVALID_ADDRESS_FIELDS)
     def test_updating_address_with_invalid_data_throws_error(self, invalid_field, authenticated_client, user):
         """GIVEN an authenticated user
 
