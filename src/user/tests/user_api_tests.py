@@ -4,10 +4,12 @@ from django.urls import reverse
 
 from user.models import User
 
+from . import VALID_CREDENTIALS
+
 
 @pytest.mark.django_db
 class TestUserRegistrationSuccess:
-    def test_registration_with_valid_credentials_is_successful(self, client, valid_credentials):
+    def test_registration_with_valid_credentials_is_successful(self, client):
         """GIVEN a set of valid credentials
 
         WHEN a client tries to register a user
@@ -15,7 +17,7 @@ class TestUserRegistrationSuccess:
         THEN a token key is returned and the user is
         inserted into the database.
         """
-        response = client.post(path="/auth/registration/", data=valid_credentials)
+        response = client.post(path="/auth/registration/", data=VALID_CREDENTIALS)
         assert response.status_code == 201
 
         # Token key is returned
@@ -23,62 +25,17 @@ class TestUserRegistrationSuccess:
         assert "key" in response_body
 
         # User has been inserted into database
-        assert User.objects.filter(email=valid_credentials["email"]).exists()
+        assert User.objects.filter(email=VALID_CREDENTIALS["email"]).exists()
 
 
 @pytest.mark.django_db
 class TestUserRegistrationFailure:
-    """Test collection for intentional failures of user registration."""
-    CREDENTIALS_INVALID_EMAIL = {
-        "email": "charly@gmail",
-        "password1": "SuperStrongPassword",
-        "password2": "SuperStrongPassword"
-    }
-    CREDENTIALS_SHORT_PASSWORD = {
-        "email": "charly@gmail.com",
-        "password1": "short",
-        "password2": "short"
-    }
-    CREDENTIALS_PASSWORD_MISMATCH = {
-        "email": "charly@gmail.com",
-        "password1": "SuperStrongPassword",
-        "password2": "DifferentPassword"
-    }
-
-    # Set up test cases with expected responses
-    # to pass to test function as parameters
-    invalid_credentials_test_cases = [
-        pytest.param(
-            CREDENTIALS_INVALID_EMAIL,
-            "email",
-            ["Enter a valid email address."],
-            id="invalid_email"
-        ),
-        pytest.param(
-            CREDENTIALS_SHORT_PASSWORD,
-            "password1",
-            ["This password is too short. It must contain at least 8 characters."],
-            id="short_password"
-        ),
-        pytest.param(
-            CREDENTIALS_PASSWORD_MISMATCH,
-            "non_field_errors",
-            ["The two password fields didn't match."],
-            id="password_mismatch"
-        )
-    ]
-
-    @pytest.mark.parametrize(
-        "credentials, expected_response_key, expected_response_message",
-        invalid_credentials_test_cases
-    )
-    def test_registration_with_invalid_credentials(
-            self,
-            client,
-            credentials,
-            expected_response_key,
-            expected_response_message
-    ):
+    @pytest.mark.parametrize("invalid_fields", [
+        (pytest.param({"email": "charly@gmail"}, id="Invalid email")),
+        (pytest.param({"password1": "short", "password2": "short"}, id="Password too short")),
+        (pytest.param({"password1": "StrongPassword", "password2": "AlsoAStrongPassword"}, id="Password mismatch"))
+    ])
+    def test_registration_with_invalid_credentials(self, invalid_fields, client):
         """GIVEN a set of invalid credentials
 
         WHEN a client tries to register a user
@@ -86,17 +43,14 @@ class TestUserRegistrationFailure:
         THEN registration is rejected and the correct error
         message is returned in the HttpResponse.
         """
-        response = client.post(path="/auth/registration/", data=credentials)
-
+        invalid_credentials = {**VALID_CREDENTIALS, **invalid_fields}
+        response = client.post(path="/auth/registration/", data=invalid_credentials)
         assert response.status_code == 400
 
-        response_body = response.json()
-        assert expected_response_key in response_body
+        # User has not been inserted into database
+        assert not User.objects.filter(email=invalid_credentials["email"]).exists()
 
-        actual_message = response_body[expected_response_key]
-        assert actual_message == expected_response_message
-
-    def test_registration_with_taken_email(self, client, valid_credentials):
+    def test_registration_with_taken_email(self, client):
         """GIVEN an anonymous user
 
         WHEN they try to register with an email that is already taken
@@ -105,19 +59,13 @@ class TestUserRegistrationFailure:
         THEN registration is rejected and the correct error
         message is returned in the HttpResponse.
         """
-        # User is registered
-        client.post(path="/auth/registration/", data=valid_credentials)
-        assert User.objects.filter(email=valid_credentials["email"]).exists()
+        # User is created
+        client.post(path="/auth/registration/", data=VALID_CREDENTIALS)
+        assert User.objects.filter(email=VALID_CREDENTIALS["email"]).exists()
 
-        # Second user registration with the same credentials is rejected
-        response = client.post(path="/auth/registration/", data=valid_credentials)
+        # Second user tries to register with same credentials
+        response = client.post(path="/auth/registration/", data=VALID_CREDENTIALS)
         assert response.status_code == 400
-
-        response_body = response.json()
-        expected_response_body = {
-            'email': ['A user is already registered with this e-mail address.']
-        }
-        assert response_body == expected_response_body
 
 
 @pytest.mark.django_db
@@ -134,8 +82,7 @@ class TestUserDetailsSuccess:
 
         expected_response_body = {
             'email': user.email,
-            'id': user.pk,
-            'profile': {}
+            'id': user.pk
         }
         response_body = response.json()
         assert response_body == expected_response_body
