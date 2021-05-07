@@ -18,3 +18,9 @@ OTHER_VALID_ADDRESS = {
     "zip_code": "88888",
     "city": "Musterheim"
 }
+
+VALID_CREDENTIALS = {
+    "email": "charly@gmail.com",
+    "password1": "SuperStrongPassword",
+    "password2": "SuperStrongPassword"
+}

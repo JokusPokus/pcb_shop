@@ -7,26 +7,22 @@ from user.models import User
 
 @pytest.mark.django_db
 class TestUserRegistrationSuccess:
-    """GIVEN a set of valid credentials
+    def test_registration_with_valid_credentials_is_successful(self, client, valid_credentials):
+        """GIVEN a set of valid credentials
 
-    WHEN a client tries to register a user
+        WHEN a client tries to register a user
 
-    THEN a token key is returned and the user is
-    inserted into the database.
-    """
-    @pytest.fixture
-    def register_with_valid_credentials(self, db, client, valid_credentials):
+        THEN a token key is returned and the user is
+        inserted into the database.
+        """
         response = client.post(path="/auth/registration/", data=valid_credentials)
-        return response
-
-    def test_201_status_and_token_key_returned(self, register_with_valid_credentials):
-        response = register_with_valid_credentials
         assert response.status_code == 201
 
+        # Token key is returned
         response_body = response.json()
         assert "key" in response_body
 
-    def test_user_inserted_in_db(self, register_with_valid_credentials, valid_credentials):
+        # User has been inserted into database
         assert User.objects.filter(email=valid_credentials["email"]).exists()
 
 
