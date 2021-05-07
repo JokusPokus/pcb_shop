@@ -112,7 +112,14 @@ class TestAddressListSuccess:
 
 @pytest.mark.django_db
 class TestAddressListFailure:
-    pass
+    def test_anonymous_user_cannot_get_address_list(self, client):
+        """GIVEN an anonymous user
+
+        WHEN she tries to request a list of addresses
+
+        THEN the request is rejected and the correct HTTP response is returned."""
+        response = client.get(path=reverse("user:address_list"))
+        assert response.status_code == 403
 
 
 @pytest.mark.django_db
