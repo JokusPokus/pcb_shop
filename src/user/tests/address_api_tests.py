@@ -9,33 +9,21 @@ from user.address_management import Address
 
 @pytest.mark.django_db
 class TestAddressCreationSuccess:
-    def test_correct_http_response(self, authenticated_client):
+    def test_correct_http_response_and_inserted_into_db(self, authenticated_client, user):
         """GIVEN valid address and an authenticated user
 
         WHEN that user tries to save the address
 
-        THEN a 201 status code and the correct address data
-        with default settings set to false is returned.
+        THEN a 201 status code is returned and the address is
+        inserted into the database with defaults set to false.
         """
         response = authenticated_client.post(path=reverse("user:address_list"), data=VALID_ADDRESS)
         assert response.status_code == 201
 
-        response_body = response.json()
-        assert response_body["is_shipping_default"] is False
-        assert response_body["is_billing_default"] is False
-
-    def test_address_inserted_into_db(self, authenticated_client, user):
-        """GIVEN valid address data and an authenticated user
-
-        WHEN that user tries to save the address
-
-        THEN the address is inserted into the database
-        and linked to the user, with defaults set to false.
-        """
-        response = authenticated_client.post(path=reverse("user:address_list"), data=VALID_ADDRESS)
-        address_id = response.json()["id"]
+        # Address is inserted into database and linked to the correct user
         assert user.addresses.filter(id=address_id, **VALID_ADDRESS).exists()
 
+        # Billing and shipping defaults are set to false
         address = Address.objects.get(id=address_id)
         assert not address.is_shipping_default
         assert not address.is_billing_default
