@@ -72,7 +72,7 @@ class TestUserRegistrationFailure:
 class TestUserDetailsSuccess:
     """GIVEN an authenticated user
 
-    WHEN that user tries to retrieve their user details
+    WHEN that user requests their user details
 
     THEN a correct and complete object with user details
     is returned."""
@@ -99,7 +99,3 @@ class TestUserDetailsFailure:
         returned."""
         response = client.get(path=reverse("user:user_details"))
         assert response.status_code == 403
-
-        response_body = response.json()
-        expected_response_body = {'detail': 'Authentication credentials were not provided.'}
-        assert response_body == expected_response_body

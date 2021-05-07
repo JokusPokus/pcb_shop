@@ -22,6 +22,7 @@ class TestAddressCreationSuccess:
         assert response.status_code == 201
 
         # Address is inserted into database and linked to the correct user
+        address_id = response.json()["id"]
         assert user.addresses.filter(id=address_id, **VALID_ADDRESS_DATA).exists()
 
         # Billing and shipping defaults are set to false
