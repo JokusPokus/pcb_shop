@@ -184,31 +184,22 @@ class TestAddressUpdateFailure:
 
 @pytest.mark.django_db
 class TestAddressDeletionSuccess:
-    def test_correct_http_response_upon_deletion(self, create_address, delete_address):
+    def test_correct_http_response_and_address_is_deleted(self, authenticated_client, user):
         """GIVEN an authenticated user with an existing address
 
         WHEN the user deletes that address
 
-        THEN the correct Http response is returned.
+        THEN the correct HTTP response is returned and the address
+        is deleted from the database.
         """
-        create_response = create_address()
-        address_id = create_response.json()["id"]
+        address = Address.objects.create(user=user, **VALID_ADDRESS)
 
-        delete_response = delete_address(address_id)
-        assert delete_response.status_code == 204
-
-    def test_address_is_deleted_from_db(self, create_address, delete_address, user):
-        """GIVEN an authenticated user with an existing address
-
-        WHEN the user deletes that address via the API
-
-        THEN the address is deleted in the database.
-        """
-        response = create_address()
-        address_id = response.json()["id"]
-
-        delete_address(address_id)
-        assert not user.addresses.filter(id=address_id).exists()
+        response = authenticated_client.delete(
+            path=reverse("user:address_details", args=[address.id]),
+            content_type='application/json'
+        )
+        assert response.status_code == 204
+        assert not user.addresses.filter(id=address.id).exists()
 
 
 @pytest.mark.django_db
