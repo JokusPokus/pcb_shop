@@ -1,7 +1,7 @@
 import pytest
 
 
-VALID_ADDRESS = {
+VALID_ADDRESS_DATA = {
     "receiver_first_name": "Max",
     "receiver_last_name": "Mustermann",
     "street": "Musterstraße",

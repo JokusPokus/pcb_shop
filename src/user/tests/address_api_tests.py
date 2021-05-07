@@ -2,7 +2,7 @@ import pytest
 
 from django.urls import reverse
 
-from . import VALID_ADDRESS, OTHER_VALID_ADDRESS
+from . import VALID_ADDRESS_DATA, OTHER_VALID_ADDRESS
 
 from user.address_management import Address
 from user.factories import AddressFactory
@@ -18,11 +18,11 @@ class TestAddressCreationSuccess:
         THEN a 201 status code is returned and the address is
         inserted into the database with defaults set to false.
         """
-        response = authenticated_client.post(path=reverse("user:address_list"), data=VALID_ADDRESS)
+        response = authenticated_client.post(path=reverse("user:address_list"), data=VALID_ADDRESS_DATA)
         assert response.status_code == 201
 
         # Address is inserted into database and linked to the correct user
-        assert user.addresses.filter(id=address_id, **VALID_ADDRESS).exists()
+        assert user.addresses.filter(id=address_id, **VALID_ADDRESS_DATA).exists()
 
         # Billing and shipping defaults are set to false
         address = Address.objects.get(id=address_id)
@@ -40,11 +40,11 @@ class TestAddressCreationFailure:
         THEN a 403 status code is returned and the address
         is not inserted into the database.
         """
-        response = client.post(path=reverse("user:address_list"), data=VALID_ADDRESS)
+        response = client.post(path=reverse("user:address_list"), data=VALID_ADDRESS_DATA)
         assert response.status_code == 403
-        assert not Address.objects.filter(**VALID_ADDRESS).exists()
+        assert not Address.objects.filter(**VALID_ADDRESS_DATA).exists()
 
-    @pytest.mark.parametrize("missing_attribute", [attribute for attribute in VALID_ADDRESS])
+    @pytest.mark.parametrize("missing_attribute", [attribute for attribute in VALID_ADDRESS_DATA])
     def test_incomplete_address_is_handled_correctly(self, missing_attribute, authenticated_client):
         """GIVEN incomplete address data and an authenticated user
 
@@ -53,7 +53,7 @@ class TestAddressCreationFailure:
         THEN a 400 status code is returned and the address is not
         inserted into the database.
         """
-        address_data = VALID_ADDRESS.copy()
+        address_data = VALID_ADDRESS_DATA.copy()
         del address_data[missing_attribute]
 
         response = authenticated_client.post(path=reverse("user:address_list"), data=address_data)
@@ -74,7 +74,7 @@ class TestAddressCreationFailure:
         THEN the correct Http error is returned and the address is
         not inserted into the database.
         """
-        invalid_address = {**VALID_ADDRESS, **invalid_field}
+        invalid_address = {**VALID_ADDRESS_DATA, **invalid_field}
         response = authenticated_client.post(path=reverse("user:address_list"), data=invalid_address)
         assert response.status_code == 400
         assert not Address.objects.filter(**invalid_address).exists()
@@ -121,6 +121,18 @@ class TestAddressListFailure:
         response = client.get(path=reverse("user:address_list"))
         assert response.status_code == 403
 
+    @pytest.mark.xfail
+    def test_user_cannot_create_address_that_already_exists(self, authenticated_client, user):
+        """GIVEN an authenticated user with an existing address
+
+        WHEN that user tries to create an address with the same data
+
+        THEN this is rejected and a 400 HTTP response is returned."""
+        Address.objects.create(user=user, **VALID_ADDRESS_DATA)
+        response = authenticated_client.post(path=reverse("user:address_list"), data=VALID_ADDRESS_DATA)
+        assert response.status_code == 400
+        assert Address.objects.filter(**VALID_ADDRESS_DATA).count() == 1
+
 
 @pytest.mark.django_db
 class TestAddressUpdateSuccess:
@@ -132,10 +144,10 @@ class TestAddressUpdateSuccess:
         THEN the correct Http response is returned and the address is
         updated in the database.
         """
-        address = Address.objects.create(user=user, **VALID_ADDRESS)
+        address = Address.objects.create(user=user, **VALID_ADDRESS_DATA)
 
         UPDATED_ZIP_CODE = "12345"
-        updated_address_data = {**VALID_ADDRESS, "zip_code": UPDATED_ZIP_CODE}
+        updated_address_data = {**VALID_ADDRESS_DATA, "zip_code": UPDATED_ZIP_CODE}
 
         response = authenticated_client.patch(
             path=reverse("user:address_details", args=[address.id]),
@@ -158,7 +170,7 @@ class TestAddressUpdateFailure:
         NON_EXISTING_ADDRESS_ID = 9999
         response = authenticated_client.patch(
             path=reverse("user:address_details", args=[NON_EXISTING_ADDRESS_ID]),
-            data=VALID_ADDRESS,
+            data=VALID_ADDRESS_DATA,
             content_type='application/json'
         )
         assert response.status_code == 404
@@ -176,8 +188,8 @@ class TestAddressUpdateFailure:
 
         THEN the correct Http error code is returned.
         """
-        address = Address.objects.create(user=user, **VALID_ADDRESS)
-        invalid_address_update = {**VALID_ADDRESS, **invalid_field}
+        address = Address.objects.create(user=user, **VALID_ADDRESS_DATA)
+        invalid_address_update = {**VALID_ADDRESS_DATA, **invalid_field}
 
         response = authenticated_client.patch(
             path=reverse("user:address_details", args=[address.id]),
@@ -193,8 +205,8 @@ class TestAddressUpdateFailure:
 
         THEN permission is denied and the correct HTTP error code is returned.
         """
-        address = Address.objects.create(user=user, **VALID_ADDRESS)
-        updated_address_data = {**VALID_ADDRESS, "zip_code": "12345"}
+        address = Address.objects.create(user=user, **VALID_ADDRESS_DATA)
+        updated_address_data = {**VALID_ADDRESS_DATA, "zip_code": "12345"}
         response = client.patch(
             path=reverse("user:address_details", args=[address.id]),
             data=updated_address_data,
@@ -213,7 +225,7 @@ class TestAddressDeletionSuccess:
         THEN the correct HTTP response is returned and the address
         is deleted from the database.
         """
-        address = Address.objects.create(user=user, **VALID_ADDRESS)
+        address = Address.objects.create(user=user, **VALID_ADDRESS_DATA)
 
         response = authenticated_client.delete(
             path=reverse("user:address_details", args=[address.id]),
@@ -232,7 +244,7 @@ class TestAddressDeletionFailure:
 
         THEN permission is denied and the correct Http error code is returned.
         """
-        address = Address.objects.create(user=user, **VALID_ADDRESS)
+        address = Address.objects.create(user=user, **VALID_ADDRESS_DATA)
 
         response = client.delete(
             path=reverse("user:address_details", args=[address.id]),
@@ -270,7 +282,7 @@ class TestAddressDefaultChangeSuccess:
             user=user,
             is_shipping_default=False,
             is_billing_default=False,
-            **VALID_ADDRESS
+            **VALID_ADDRESS_DATA
         )
 
         # Create default address
@@ -340,7 +352,7 @@ class TestAddressDefaultChangeFailure:
         )
 
         # Create address not owned by user of interest
-        non_owned_address = Address.objects.create(user=other_user, **VALID_ADDRESS)
+        non_owned_address = Address.objects.create(user=other_user, **VALID_ADDRESS_DATA)
 
         # Try to change default to non-owned address via API
         url = reverse("user:change_address_default") + f"?address-id={non_owned_address.id}&type={address_type}"
