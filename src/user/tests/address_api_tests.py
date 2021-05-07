@@ -148,7 +148,7 @@ class TestAddressUpdateFailure:
         (pytest.param({"receiver_first_name": "a" * 100}, id="Name too long")),
         (pytest.param({"house_number": "1000000 c"}, id="House number too long"))
     ])
-    def test_updating_address_with_invalid_data_throws_error(self, invalid_field, authenticated_client):
+    def test_updating_address_with_invalid_data_throws_error(self, invalid_field, authenticated_client, user):
         """GIVEN an authenticated user
 
         WHEN the user tries to update an existing address with invalid data
@@ -165,7 +165,7 @@ class TestAddressUpdateFailure:
         )
         assert response.status_code == 400
 
-    def test_anonymous_user_cannot_update_address(self, client):
+    def test_anonymous_user_cannot_update_address(self, client, user):
         """GIVEN an anonymous user
 
         WHEN the user tries to update an existing address
@@ -204,20 +204,22 @@ class TestAddressDeletionSuccess:
 
 @pytest.mark.django_db
 class TestAddressDeletionFailure:
-    def test_anonymous_user_cannot_delete_address(self, create_address, delete_address, client):
+    def test_anonymous_user_cannot_delete_address(self, client, user):
         """GIVEN an anonymous user
 
         WHEN the user tries to delete an existing address
 
         THEN permission is denied and the correct Http error code is returned.
         """
-        create_response = create_address()
-        address_id = create_response.json()["id"]
+        address = Address.objects.create(user=user, **VALID_ADDRESS)
 
-        delete_response = delete_address(address_id, anonymous=True)
-        assert delete_response.status_code == 403
+        response = client.delete(
+            path=reverse("user:address_details", args=[address.id]),
+            content_type='application/json'
+        )
+        assert response.status_code == 403
 
-    def test_updating_non_existing_address_throws_404(self, delete_address):
+    def test_deleting_non_existing_address_throws_404(self, authenticated_client):
         """GIVEN an authenticated user
 
         WHEN the user tries to delete a non-existing address
@@ -225,7 +227,10 @@ class TestAddressDeletionFailure:
         THEN the correct Http error code is returned.
         """
         NON_EXISTING_ADDRESS_ID = 9999
-        response = delete_address(NON_EXISTING_ADDRESS_ID)
+        response = authenticated_client.delete(
+            path=reverse("user:address_details", args=[NON_EXISTING_ADDRESS_ID]),
+            content_type='application/json'
+        )
         assert response.status_code == 404
 
 
