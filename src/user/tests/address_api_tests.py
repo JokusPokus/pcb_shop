@@ -1,13 +1,13 @@
 import pytest
 
-from src.user.tests.conftest import VALID_ADDRESS, OTHER_VALID_ADDRESS, INVALID_ADDRESS_FIELDS
+from . import VALID_ADDRESS, OTHER_VALID_ADDRESS, INVALID_ADDRESS_FIELDS
 
-from src.user.address_management import Address
+from user.address_management import Address
 
 
 @pytest.mark.django_db
 class TestAddressCreationSuccess:
-    def test_correct_http_response(self, create_address):
+    def test_correct_http_response(self, client):
         """GIVEN valid address and an authenticated user
 
         WHEN that user tries to save the address
@@ -15,42 +15,28 @@ class TestAddressCreationSuccess:
         THEN a 201 status code and the correct address data
         with default settings set to false is returned.
         """
-        response = create_address()
+        response = client.post(path=reverse("address_list"), data=VALID_ADDRESS)
         assert response.status_code == 201
 
         response_body = response.json()
-        expected_response_data = VALID_ADDRESS.copy()
-        expected_response_data.update({
-            "is_shipping_default": False,
-            "is_billing_default": False
-        })
-        # Expected response data is contained in response_body
-        assert expected_response_data.items() <= response_body.items()
+        assert response_body["is_shipping_default"] is False
+        assert response_body["is_billing_default"] is False
 
-    def test_address_inserted_into_db(self, create_address, user):
+    def test_address_inserted_into_db(self, client, user):
         """GIVEN valid address data and an authenticated user
 
         WHEN that user tries to save the address
 
-        THEN the address is inserted into the database.
+        THEN the address is inserted into the database
+        and linked to the user, with defaults set to false.
         """
-        response = create_address()
+        response = client.post(path=reverse("address_list"), data=VALID_ADDRESS)
         address_id = response.json()["id"]
         assert user.addresses.filter(id=address_id, **VALID_ADDRESS).exists()
 
-    def test_address_is_not_set_to_default(self, create_address, user):
-        """GIVEN valid address data and an authenticated user
-
-        WHEN that address is saved into the database
-
-        THEN the address is not set to be a shipping or billing
-        default.
-        """
-        response = create_address()
-        address_id = response.json()["id"]
-        new_address = user.addresses.get(id=address_id)
-        assert not new_address.is_shipping_default
-        assert not new_address.is_billing_default
+        address = Address.objects.get(id=address_id)
+        assert not address.is_shipping_default
+        assert not address.is_billing_default
 
 
 @pytest.mark.django_db
