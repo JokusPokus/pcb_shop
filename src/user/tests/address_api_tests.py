@@ -18,7 +18,6 @@ class TestAddressCreationSuccess:
         with default settings set to false is returned.
         """
         response = authenticated_client.post(path=reverse("user:address_list"), data=VALID_ADDRESS)
-        print(response.json())
         assert response.status_code == 201
 
         response_body = response.json()
@@ -44,81 +43,52 @@ class TestAddressCreationSuccess:
 
 @pytest.mark.django_db
 class TestAddressCreationFailure:
-    def test_correct_http_response_for_anonymous_user(self, create_address):
+    def test_anonymous_user_is_handled_correctly(self, client):
         """GIVEN valid address data and an anonymous user
 
         WHEN that user tries to create the address
 
-        THEN a 403 status code and a rejection message is returned.
+        THEN a 403 status code is returned and the address
+        is not inserted into the database.
         """
-        response = create_address(VALID_ADDRESS, anonymous=True)
+        response = client.post(path=reverse("user:address_list"), data=VALID_ADDRESS)
         assert response.status_code == 403
-
-        response_body = response.json()
-        expected_response_body = {
-            "detail": "Authentication credentials were not provided."
-        }
-        assert response_body == expected_response_body
-
-    def test_address_not_created_for_anonymous_user(self, create_address):
-        """GIVEN valid address data and an anonymous user
-
-        WHEN that user tries to create the address
-
-        THEN the address is not inserted into the database.
-        """
-        create_address(VALID_ADDRESS, anonymous=True)
         assert not Address.objects.filter(**VALID_ADDRESS).exists()
 
     @pytest.mark.parametrize("missing_attribute", [attribute for attribute in VALID_ADDRESS])
-    def test_correct_http_response_to_incomplete_address(self, missing_attribute, create_address):
+    def test_incomplete_address_is_handled_correctly(self, missing_attribute, authenticated_client):
         """GIVEN incomplete address data and an authenticated user
 
         WHEN that user tries to create the address
 
-        THEN a 400 status code and the correct error message are returned.
+        THEN a 400 status code is returned and the address is not
+        inserted into the database.
         """
         address_data = VALID_ADDRESS.copy()
         del address_data[missing_attribute]
 
-        response = create_address(address_data)
-
+        response = authenticated_client.post(path=reverse("user:address_list"), data=address_data)
         assert response.status_code == 400
-
-        response_body = response.json()
-        expected_response_body = {
-            missing_attribute: [
-                "This field is required."
-            ]
-        }
-        assert response_body == expected_response_body
-
-    @pytest.mark.parametrize("missing_attribute", [attribute for attribute in VALID_ADDRESS])
-    def test_incomplete_address_not_inserted_into_db(self, missing_attribute, create_address):
-        """GIVEN incomplete address data and an authenticated user
-
-        WHEN that user tries to create the address
-
-        THEN the address is not inserted into the database.
-        """
-        address_data = VALID_ADDRESS.copy()
-        del address_data[missing_attribute]
-        create_address(address_data)
         assert not Address.objects.filter(**address_data).exists()
 
-    @pytest.mark.parametrize("invalid_fields", INVALID_ADDRESS_FIELDS)
-    def test_invalid_address_data_throws_error(self, invalid_fields, create_address):
+    @pytest.mark.parametrize("invalid_field", [
+        (pytest.param({"zip_code": "1234"}, id="Zip too short")),
+        (pytest.param({"zip_code": "123456"}, id="Zip too long")),
+        (pytest.param({"receiver_first_name": "a" * 100}, id="Name too long")),
+        (pytest.param({"house_number": "1000000 c"}, id="House number too long"))
+    ])
+    def test_invalid_address_field_throws_error(self, invalid_field, authenticated_client):
         """GIVEN an authenticated user
 
         WHEN that user tries to create an address with (partially) invalid data
 
-        THEN the correct Http error is returned.
+        THEN the correct Http error is returned and the address is
+        not inserted into the database.
         """
-        invalid_address = VALID_ADDRESS.copy()
-        invalid_address.update(invalid_fields)
-        response = create_address(invalid_address)
-
+        invalid_address = {**VALID_ADDRESS, **invalid_field}
+        response = authenticated_client.post(path=reverse("user:address_list"), data=invalid_address)
         assert response.status_code == 400
+        assert not Address.objects.filter(**invalid_address).exists()
 
 
 @pytest.mark.django_db
