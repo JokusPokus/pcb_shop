@@ -237,51 +237,42 @@ class TestAddressDeletionFailure:
 @pytest.mark.django_db
 class TestAddressDefaultChangeSuccess:
     @pytest.mark.parametrize("address_type", ["shipping", "billing"])
-    def test_correct_http_response(self, address_type, create_address, set_as_default):
+    def test_default_is_changed_correctly(self, address_type, authenticated_client, user):
         """GIVEN an authenticated user with an existing address
 
         WHEN the user sets that address as the new shipping or billing
         default address
 
         THEN she receives a 200 Http response with a success message."""
-        create_response = create_address()
-        address_id = create_response.json()["id"]
+        # Create non-default address
+        first_address = Address.objects.create(
+            user=user,
+            is_shipping_default=False,
+            is_billing_default=False,
+            **VALID_ADDRESS
+        )
 
-        response = set_as_default(address_type, address_id)
+        # Create default address
+        second_address = Address.objects.create(
+            user=user,
+            is_shipping_default=True,
+            is_billing_default=True,
+            **OTHER_VALID_ADDRESS
+        )
+
+        # Change default from second to first address via API
+        url = reverse("user:change_address_default") + f"?address-id={first_address.id}&type={address_type}"
+        response = authenticated_client.get(path=url)
         assert response.status_code == 200
 
-        response_body = response.json()
-        assert response_body.get("Success") == f"Default {address_type} address changed successfully"
+        first_address.refresh_from_db()
+        second_address.refresh_from_db()
 
-    @pytest.mark.parametrize("address_type", ["shipping", "billing"])
-    def test_default_change_removes_old_default(self, address_type, create_and_set_as_default, user):
-        """GIVEN an authenticated user with an existing default
-        shipping or billing address
+        # First address is new default
+        assert getattr(first_address, f"is_{address_type}_default")
 
-        WHEN the user sets a new shipping or billing default address
-
-        THEN the default status of the old default address is removed
-        in the database."""
-        create_and_set_as_default(address_type, VALID_ADDRESS)
-        create_and_set_as_default(address_type, OTHER_VALID_ADDRESS)
-
-        old_default = user.addresses.get(**VALID_ADDRESS)
-        assert not getattr(old_default, f"is_{address_type}_default")
-
-    @pytest.mark.parametrize("address_type", ["shipping", "billing"])
-    def test_default_change_adds_new_default(self, address_type, create_and_set_as_default, user):
-        """GIVEN an authenticated user with an existing default
-        shipping or billing address
-
-        WHEN the user sets a new shipping or billing default address
-
-        THEN the default status of the new default address is set
-        in the database."""
-        create_and_set_as_default(address_type, VALID_ADDRESS)
-        create_and_set_as_default(address_type, OTHER_VALID_ADDRESS)
-
-        new_default = user.addresses.get(**OTHER_VALID_ADDRESS)
-        assert getattr(new_default, f"is_{address_type}_default")
+        # Second address is not the default anymore
+        assert not getattr(second_address, f"is_{address_type}_default")
 
 
 @pytest.mark.django_db
