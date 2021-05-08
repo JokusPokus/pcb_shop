@@ -33,7 +33,7 @@ class TestAddressCreationSuccess:
 
 @pytest.mark.django_db
 class TestAddressCreationFailure:
-    def test_anonymous_user_is_handled_correctly(self, client):
+    def test_anonymous_user_cannot_create_address(self, client):
         """GIVEN valid address data and an anonymous user
 
         WHEN that user tries to create the address
@@ -46,7 +46,7 @@ class TestAddressCreationFailure:
         assert not Address.objects.filter(**VALID_ADDRESS_DATA).exists()
 
     @pytest.mark.parametrize("missing_attribute", [attribute for attribute in VALID_ADDRESS_DATA])
-    def test_incomplete_address_is_handled_correctly(self, missing_attribute, authenticated_client):
+    def test_incomplete_address_is_not_created(self, missing_attribute, authenticated_client):
         """GIVEN incomplete address data and an authenticated user
 
         WHEN that user tries to create the address
@@ -74,6 +74,18 @@ class TestAddressCreationFailure:
         response = authenticated_client.post(path=reverse("user:address_list"), data=invalid_address)
         assert response.status_code == 400
         assert not Address.objects.filter(**invalid_address).exists()
+
+    @pytest.mark.xfail
+    def test_user_cannot_create_address_that_already_exists(self, authenticated_client, user):
+        """GIVEN an authenticated user with an existing address
+
+        WHEN that user tries to create an address with the same data
+
+        THEN this is rejected and a 400 HTTP response is returned."""
+        Address.objects.create(user=user, **VALID_ADDRESS_DATA)
+        response = authenticated_client.post(path=reverse("user:address_list"), data=VALID_ADDRESS_DATA)
+        assert response.status_code == 400
+        assert Address.objects.filter(**VALID_ADDRESS_DATA).count() == 1
 
 
 @pytest.mark.django_db
@@ -116,18 +128,6 @@ class TestAddressListFailure:
         THEN the request is rejected and the correct HTTP response is returned."""
         response = client.get(path=reverse("user:address_list"))
         assert response.status_code == 403
-
-    @pytest.mark.xfail
-    def test_user_cannot_create_address_that_already_exists(self, authenticated_client, user):
-        """GIVEN an authenticated user with an existing address
-
-        WHEN that user tries to create an address with the same data
-
-        THEN this is rejected and a 400 HTTP response is returned."""
-        Address.objects.create(user=user, **VALID_ADDRESS_DATA)
-        response = authenticated_client.post(path=reverse("user:address_list"), data=VALID_ADDRESS_DATA)
-        assert response.status_code == 400
-        assert Address.objects.filter(**VALID_ADDRESS_DATA).count() == 1
 
 
 @pytest.mark.django_db

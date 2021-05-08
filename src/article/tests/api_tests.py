@@ -97,6 +97,18 @@ class TestBoardList:
 
 
 @pytest.mark.django_db
+class TestBoardListFailure:
+    def test_anonymous_user_cannot_get_board_list(self, client):
+        """GIVEN an anonymous user
+
+        WHEN she tries to request a list of boards
+
+        THEN the request is rejected and the correct HTTP response is returned."""
+        response = client.get(path=reverse("article:board_list"))
+        assert response.status_code == 403
+
+
+@pytest.mark.django_db
 class TestBoardDetailsSuccess:
     """Collection of test cases for retrieving board details."""
     def test_get_details_for_owned_board(self, authenticated_client, user, create_boards):
