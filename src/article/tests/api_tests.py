@@ -6,6 +6,7 @@ from django.urls import reverse
 
 from article.models import Board
 
+from . import BoardFactory
 from . import VALID_BOARD_DATA
 
 
@@ -49,7 +50,7 @@ class TestBoardCreationFailure:
 
     @pytest.mark.skip
     @pytest.mark.parametrize("missing_attribute", [attribute for attribute in VALID_BOARD_DATA["attributes"]])
-    def test_correct_http_response_to_incomplete_board(self, missing_attribute, create_boards):
+    def test_incomplete_board_is_not_created(self, missing_attribute, create_boards):
         """GIVEN incomplete board data and an authenticated user
 
         WHEN that user tries to create the board
@@ -67,61 +68,32 @@ class TestBoardCreationFailure:
 
 @pytest.mark.django_db
 class TestBoardList:
-    def test_200_status_and_list_is_complete(self, create_boards, authenticated_client):
+    def test_board_list_is_complete(self, authenticated_client, user, other_user):
         """GIVEN an authenticated user who has created some boards
 
         WHEN that user requests a list of their boards (GET)
 
-        THEN all of the created boards are present, and the HTTP
-        response contains the complete information for all boards.
-        The user is listed as board owner.
+        THEN all of the created boards are present, but none of the
+        boards not owned by the user.
         """
-        NUM_BOARDS = 3
-        create_boards(num_boards=NUM_BOARDS)
+        owned_board_ids = set()
 
-        response = authenticated_client.get(path=reverse("shop:board_list"))
+        NUM_OWNED_BOARDS = 3
+        for _ in range(NUM_OWNED_BOARDS):
+            board = BoardFactory(owner=user)
+            owned_board_ids.add(board.id)
+
+        NUM_NON_OWNED_BOARDS = 3
+        for _ in range(NUM_NON_OWNED_BOARDS):
+            BoardFactory(owner=other_user)
+
+        response = authenticated_client.get(path=reverse("article:board_list"))
         assert response.status_code == 200
 
-        board_list = response.json()
-        assert len(board_list) == NUM_BOARDS
-
-    def test_boards_in_list_have_correct_owner(self, create_boards, user, authenticated_client):
-        """GIVEN an authenticated user who has created some boards
-
-        WHEN that user requests a list of their boards (GET)
-
-        THEN the user is listed as board owner in all of them and
-        each one contains the correct information.
-        """
-        create_boards(num_boards=3)
-
-        response = authenticated_client.get(path=reverse("shop:board_list"))
-        board_list = response.json()
-        for board in board_list:
-            assert board["owner"] == user.email
-
-            # Data used to create the board is contained in the response body
-            assert VALID_BOARD_DATA.items() <= board.items()
-
-    def test_board_list_does_not_contain_other_users_boards(self, create_boards, client, other_user):
-        """GIVEN an authenticated user who has created some boards
-
-        WHEN a different user requests a list of their own boards (GET)
-
-        THEN none of the former user's boards are present in the HTTP
-        response - instead, the response contains an empty list.
-        """
-        # One user creates a board.
-        create_boards(num_boards=1)
-
-        # A different user who has not created boards yet requests a list of her boards.
-        client.logout()
-        client.force_login(other_user)
-        response = client.get(path=reverse("shop:board_list"))
-
-        board_list = response.json()
-        assert isinstance(board_list, List)
-        assert len(board_list) == 0
+        # Returned boards contain owned boards but not non-owned boards
+        response_body = response.json()
+        returned_board_ids = {board["id"] for board in response_body}
+        assert owned_board_ids == returned_board_ids
 
 
 @pytest.mark.django_db
