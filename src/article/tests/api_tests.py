@@ -1,3 +1,4 @@
+import json
 import pytest
 from typing import List
 
@@ -5,48 +6,27 @@ from django.urls import reverse
 
 from article.models import Board
 
-from .conftest import VALID_BOARD_DATA
+from . import VALID_BOARD_DATA
 
 
 @pytest.mark.django_db
 class TestBoardCreationSuccess:
-    def test_correct_http_response(self, create_boards, user):
+    def test_correct_http_response(self, django_db_setup, authenticated_client, user):
         """GIVEN valid board data and an authenticated user
 
         WHEN that user tries to create the board
 
-        THEN a 201 status code and the correct board data
-        with additional meta information is returned.
+        THEN a 201 status code is returned and the board is
+        inserted into the database with the correct user.
         """
-        response = create_boards(num_boards=1, data=VALID_BOARD_DATA)
+        board_data = VALID_BOARD_DATA.copy()
+        board_data["attributes"] = json.dumps(board_data["attributes"])
+        response = authenticated_client.post(path=reverse("shop:board_list"), data=board_data)
         print(response.json())
         assert response.status_code == 201
 
-        response_body = response.json()
-
-        # Expected to return board data with some extra information
-        expected_response_data = VALID_BOARD_DATA.copy()
-        expected_response_data.update({
-            'category': 'PCB',
-            'owner': user.email
-        })
-
-        # Expected response data is subset of actual response
-        assert expected_response_data.items() <= response_body.items()
-
-    def test_board_inserted_into_db(
-            self,
-            create_boards,
-    ):
-        """GIVEN valid board data and an authenticated user
-
-        WHEN that user tries to create the board
-
-        THEN the board is inserted into the database.
-        """
-        response = create_boards(num_boards=1, data=VALID_BOARD_DATA)
         board_id = response.json()["id"]
-        assert Board.objects.filter(id=board_id, **VALID_BOARD_DATA).exists()
+        assert user.boards.filter(id=board_id, **VALID_BOARD_DATA).exists()
 
 
 @pytest.mark.django_db

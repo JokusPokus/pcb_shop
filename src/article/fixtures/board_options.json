@@ -1,0 +1,39 @@
+[
+  {
+    "model": "article.ExternalBoardOptions",
+    "pk": 1,
+    "fields": {
+      "attribute_options": {
+        "differentDesigns": {
+          "choices": [1, 2, 3]
+        },
+        "dimensionX": {
+          "range": {
+            "min": 10,
+            "max": 100
+          }
+        }
+      },
+      "external_shop": 1,
+      "created": "2021-03-16T17:41:28+00:00"
+    }
+  },
+  {
+    "model": "article.OfferedBoardOptions",
+    "pk": 1,
+    "fields": {
+      "attribute_options": {
+        "differentDesigns": {
+          "choices": [1, 2]
+        },
+        "dimensionX": {
+          "range": {
+            "min": 10,
+            "max": 50
+          }
+        }
+      },
+      "created": "2021-04-16T17:41:28+00:00"
+    }
+  }
+]

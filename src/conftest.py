@@ -2,8 +2,15 @@ import pytest
 
 from typing import Callable, Optional
 from django.test import Client
+from django.core.management import call_command
 
 from user.models import User
+
+
+@pytest.fixture(scope='session')
+def django_db_setup(django_db_setup, django_db_blocker):
+    with django_db_blocker.unblock():
+        call_command('loaddata', 'board_options.json')
 
 
 @pytest.fixture
