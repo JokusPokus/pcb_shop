@@ -32,7 +32,7 @@ class TestBoardCreationSuccess:
 
 @pytest.mark.django_db
 class TestBoardCreationFailure:
-    def test_anonymous_user_cannot_create_board(self, client):
+    def test_anonymous_user_cannot_create_board(self, django_db_setup, client):
         """GIVEN valid board data and an anonymous user
 
         WHEN that user tries to create the board
@@ -50,7 +50,7 @@ class TestBoardCreationFailure:
 
     @pytest.mark.skip
     @pytest.mark.parametrize("missing_attribute", [attribute for attribute in VALID_BOARD_DATA["attributes"]])
-    def test_incomplete_board_is_not_created(self, missing_attribute, create_boards):
+    def test_incomplete_board_is_not_created(self, django_db_setup, missing_attribute, authenticated_client):
         """GIVEN incomplete board data and an authenticated user
 
         WHEN that user tries to create the board
@@ -58,12 +58,12 @@ class TestBoardCreationFailure:
         THEN a 400 status code is returned and the board
         is not inserted into the database.
         """
-        incomplete_data = VALID_BOARD_DATA.copy()
-        del incomplete_data["attributes"][missing_attribute]
+        board_data = VALID_BOARD_DATA.copy()
+        del board_data["attributes"][missing_attribute]
 
-        response = create_boards(data=incomplete_data, num_boards=1)
+        response = authenticated_client.post(path=reverse("shop:board_list"), data=board_data)
         assert response.status_code == 400
-        assert not Board.objects.filter(**incomplete_data).exists()
+        assert not Board.objects.filter(**board_data).exists()
 
 
 @pytest.mark.django_db
@@ -130,37 +130,28 @@ class TestBoardDetailsSuccess:
 
 @pytest.mark.django_db
 class TestBoardDetailsFailure:
-    def test_no_details_for_other_users_board(self, authenticated_client, create_boards, other_user):
-        """GIVEN an authenticated user who has created a board
+    def test_no_details_for_other_users_board(self, authenticated_client, other_user):
+        """GIVEN an authenticated user
 
-        WHEN a different user requests details of that board (GET)
+        WHEN she tries to get details for a board she does not own
 
         THEN permission is rejected together with a 403
         status code.
         """
-        # One user creates a board
-        post_response = create_boards(num_boards=1)
-        board_id = post_response.json()["id"]
+        # Create board not owned by user of interest
+        board = Board.objects.create(owner=other_user, **VALID_BOARD_DATA)
 
-        # A different user requests details about that board
-        authenticated_client.logout()
-        authenticated_client.force_login(other_user)
+        # User of interest tries to access board details
+        response = authenticated_client.get(path=reverse("shop:board_details", args=[board.id]))
+        assert response.status_code == 403
 
-        get_response = authenticated_client.get(path=reverse("shop:board_details", args=[board_id]))
-        assert get_response.status_code == 403
-
-        response_body = get_response.json()
-        assert response_body.get("detail") == "You do not have permission to perform this action."
-
-    def test_get_404_for_non_exiting_board(self, authenticated_client):
+    def test_no_details_for_non_existing_board(self, authenticated_client):
         """GIVEN an authenticated user
 
-        WHEN they request details of a board that does not exist (GET)
+        WHEN he requests details of a board that does not exist
 
-        THEN a 404 response is received.
+        THEN a 404 response is returned.
         """
         NON_EXISTING_BOARD_ID = 9999
-        path = reverse("shop:board_details", args=[NON_EXISTING_BOARD_ID])
-        response = authenticated_client.get(path=path)
-
+        response = authenticated_client.get(path=reverse("shop:board_details", args=[NON_EXISTING_BOARD_ID]))
         assert response.status_code == 404
