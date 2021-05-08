@@ -110,26 +110,22 @@ class TestBoardListFailure:
 
 @pytest.mark.django_db
 class TestBoardDetailsSuccess:
-    """Collection of test cases for retrieving board details."""
-    def test_get_details_for_owned_board(self, authenticated_client, user, create_boards):
-        """GIVEN an authenticated user who has created a board
+    def test_get_details_for_owned_board(self, authenticated_client, user):
+        """GIVEN an authenticated user with an existing board
 
-        WHEN they request details of that board (GET)
+        WHEN they request details of that board
 
         THEN those details are returned together with
         a 200 status code, listing the user as board owner.
         """
-        post_response = create_boards(data=VALID_BOARD_DATA, num_boards=1)
-        board_id = post_response.json()["id"]
+        board = Board.objects.create(owner=user, **VALID_BOARD_DATA)
 
-        get_response = authenticated_client.get(path=reverse("shop:board_details", args=[board_id]))
-        board_details = get_response.json()
+        response = authenticated_client.get(path=reverse("shop:board_details", args=[board.id]))
+        assert response.status_code == 200
 
-        assert get_response.status_code == 200
+        board_details = response.json()
         assert board_details["owner"] == user.email
-
-        # Data used to create the board is contained in the response body
-        assert VALID_BOARD_DATA.items() <= board_details.items()
+        assert board_details["attributes"] == VALID_BOARD_DATA["attributes"]
 
 
 @pytest.mark.django_db
