@@ -21,8 +21,8 @@ class TestBoardCreationSuccess:
         """
         board_data = VALID_BOARD_DATA.copy()
         board_data["attributes"] = json.dumps(board_data["attributes"])
+
         response = authenticated_client.post(path=reverse("shop:board_list"), data=board_data)
-        print(response.json())
         assert response.status_code == 201
 
         board_id = response.json()["id"]
@@ -31,69 +31,37 @@ class TestBoardCreationSuccess:
 
 @pytest.mark.django_db
 class TestBoardCreationFailure:
-    def test_correct_http_response_for_anonymous_user(self, create_boards):
+    def test_anonymous_user_cannot_create_board(self, client):
         """GIVEN valid board data and an anonymous user
 
         WHEN that user tries to create the board
 
-        THEN a 403 status code and a rejection message is returned.
+        THEN a 403 status code is returned and the board is
+        not inserted into the database.
         """
-        response = create_boards(anonymous=True)
+        board_data = VALID_BOARD_DATA.copy()
+        board_data["attributes"] = json.dumps(board_data["attributes"])
+
+        response = client.post(path=reverse("shop:board_list"), data=board_data)
         assert response.status_code == 403
 
-        response_body = response.json()
-        expected_response_body = {
-            "detail": "Authentication credentials were not provided."
-        }
-        assert response_body == expected_response_body
-
-    def test_board_not_created_for_anonymous_user(self, create_boards):
-        """GIVEN valid board data and an anonymous user
-
-        WHEN that user tries to create the board
-
-        THEN the board is not inserted into the database.
-        """
-        create_boards(anonymous=True)
         assert not Board.objects.filter(**VALID_BOARD_DATA).exists()
 
-    @pytest.mark.xfail
+    @pytest.mark.skip
     @pytest.mark.parametrize("missing_attribute", [attribute for attribute in VALID_BOARD_DATA["attributes"]])
     def test_correct_http_response_to_incomplete_board(self, missing_attribute, create_boards):
         """GIVEN incomplete board data and an authenticated user
 
         WHEN that user tries to create the board
 
-        THEN a 400 status code and the correct error message are returned.
+        THEN a 400 status code is returned and the board
+        is not inserted into the database.
         """
         incomplete_data = VALID_BOARD_DATA.copy()
         del incomplete_data["attributes"][missing_attribute]
 
         response = create_boards(data=incomplete_data, num_boards=1)
         assert response.status_code == 400
-
-        response_body = response.json()
-        expected_response_body = {
-            missing_attribute: [
-                "This field is required."
-            ]
-        }
-        assert response_body == expected_response_body
-
-    @pytest.mark.xfail
-    @pytest.mark.parametrize("missing_attribute", [attribute for attribute in VALID_BOARD_DATA])
-    def test_incomplete_board_not_inserted_into_db(self, missing_attribute, create_boards):
-        """GIVEN incomplete board data and an authenticated user
-
-        WHEN that user tries to create the board
-
-        THEN the board is not inserted into the database.
-        """
-        incomplete_data = VALID_BOARD_DATA.copy()
-        del incomplete_data["attributes"][missing_attribute]
-
-        create_boards(data=incomplete_data, num_boards=1)
-
         assert not Board.objects.filter(**incomplete_data).exists()
 
 
