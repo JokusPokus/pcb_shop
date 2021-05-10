@@ -1,4 +1,4 @@
-from src.article.validators import BoardOptionValidator
+from article.validators import BoardOptionValidator
 
 
 class TestPrivateMethods:
