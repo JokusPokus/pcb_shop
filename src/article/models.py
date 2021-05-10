@@ -107,7 +107,7 @@ class OfferedBoardOptions(models.Model):
 class ExternalBoardOptions(models.Model):
     """Model to store the board options externally available in some PCB shop at any given time."""
     created = models.DateTimeField(auto_now_add=True)
-    external_shop = models.ForeignKey(ExternalShop, on_delete=models.DO_NOTHING)
+    external_shop = models.ForeignKey(ExternalShop, on_delete=models.DO_NOTHING, related_name="external_board_options")
     attribute_options = models.JSONField()
 
     class Meta:

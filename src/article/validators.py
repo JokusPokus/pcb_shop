@@ -64,18 +64,8 @@ class BoardOptionValidator:
     """Validates a set of internally offered board options
     against a set of externally available options.
     """
-    def __init__(self, shop: Optional[str] = None):
-        if shop is None:
-            ExternalShop = apps.get_model('article', 'ExternalShop')
-            shop = ExternalShop.objects.get(name="Example PCB Shop")
-        self.shop = shop
-        self.external_options = self._get_external_options()
-
-    def _get_external_options(self):
-        """Returns the most up-to-date version of the board options
-        offered by self.shop.
-        """
-        return self.shop.externalboardoptions_set.latest("created").attribute_options
+    def __init__(self, external_options: dict):
+        self.external_options = external_options
 
     @staticmethod
     def _contains_choices(option_values):
@@ -147,5 +137,7 @@ def validate_external_consistency(options: dict) -> None:
 
     Raises ValidationError if internal options are not valid.
     """
-    validator = BoardOptionValidator()
+    shop = ExternalShop.objects.get(name="Example PCB Shop")
+    external_options = shop.external_board_options.latest("created").attribute_options
+    validator = BoardOptionValidator(external_options)
     validator.validate(options)
