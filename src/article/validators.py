@@ -78,6 +78,9 @@ class BoardOptionValidator:
 
     @staticmethod
     def _validate_choices(internal_values: dict, external_values: dict, label: str) -> None:
+        if not internal_values["choices"]:
+            raise ValidationError(f"Attribute choices for {label} must not be empty.")
+
         if not isinstance(internal_values["choices"], list):
             raise ValidationError(
                 f"Choices for attribute {label} must be given as a list, not {type(internal_values)}."
@@ -99,6 +102,9 @@ class BoardOptionValidator:
             raise ValidationError(
                 f"Bounds for attribute {label} must be given as numbers (int or float), not {type(internal_values)}."
             )
+
+        if internal_values["range"]["min"] > internal_values["range"]["max"]:
+            raise ValidationError(f"Upper bound for attribute {label} cannot be larger than lower bound.")
 
         if (
                 internal_values["range"]["min"] < external_values["range"]["min"]
