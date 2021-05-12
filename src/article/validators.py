@@ -86,6 +86,9 @@ class BoardOptionValidator:
                 f"Choices for attribute {label} must be given as a list, not {type(internal_values)}."
             )
 
+        if not len(internal_values["choices"]) == len(set(internal_values["choices"])):
+            raise ValidationError(f"Attribute choices for {label} contain duplicate values.")
+
         choice_types = {type(value) for value in internal_values["choices"]}
         if len(choice_types) != 1:
             raise ValidationError(f"Attribute choices for {label} must all have the same type.")
