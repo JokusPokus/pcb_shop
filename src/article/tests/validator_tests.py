@@ -2,7 +2,7 @@ import pytest
 
 from django.core.exceptions import ValidationError
 
-from article.validators import BoardOptionValidator
+from article.validators import BoardOptionValidator, AttributeValidator
 
 
 class TestBoardOptionValidator:
@@ -89,4 +89,39 @@ class TestBoardOptionValidator:
 
 
 class TestAttributeValidator:
-    pass
+    OFFERED_OPTIONS = {
+        "differentDesigns": {
+            "choices": [1, 2, 3]
+        },
+        "dimensionX": {
+            "range": {
+                "min": 10,
+                "max": 100
+            }
+        }
+    }
+
+    @pytest.mark.parametrize("differentDesigns, dimensionX", [
+        (1, 10),
+        (3, 100),
+        (2, 42),
+    ])
+    def test_valid_attributes_do_not_raise_exception(self, differentDesigns, dimensionX):
+        """GIVEN an AttributeValidator instantiated with a set of
+        currently offered board options
+
+        WHEN the validate method is called with a set of valid board attributes
+
+        THEN no exception is thrown.
+        """
+        validator = AttributeValidator(self.OFFERED_OPTIONS)
+
+        board_attributes = {
+            "differentDesigns": differentDesigns,
+            "dimensionX": dimensionX
+        }
+
+        try:
+            validator.validate(board_attributes)
+        except ValidationError:
+            pytest.fail("Valid board attributes raised ValidationError")

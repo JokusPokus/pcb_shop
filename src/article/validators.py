@@ -8,8 +8,8 @@ class AttributeValidator:
     """Validates a specific attribute configuration against the
     currently offered board options.
     """
-    def __init__(self):
-        self.offered_options: dict = self._get_current_options()
+    def __init__(self, offered_options: Optional[dict] = None):
+        self.offered_options = offered_options or self._get_current_options()
 
     @staticmethod
     def _get_current_options() -> dict:
