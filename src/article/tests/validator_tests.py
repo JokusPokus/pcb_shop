@@ -10,6 +10,9 @@ class TestBoardOptionValidator:
         "differentDesigns": {
             "choices": [1, 2, 3]
         },
+        "castellatedHoles": {
+            "choices": ["yes", "no"]
+        },
         "dimensionX": {
             "range": {
                 "min": 10,
@@ -18,13 +21,14 @@ class TestBoardOptionValidator:
         }
     }
 
-    @pytest.mark.parametrize("choices, range_min, range_max", [
-        ([1, 2, 3], 10, 100),
-        ([1], 10, 100),
-        ([1, 2], 30, 80),
-        ([1, 2, 3], 50, 50)
+    @pytest.mark.parametrize("choices_dD, choices_cH, range_min, range_max", [
+        ([1, 2, 3], ["yes", "no"], 10, 100),
+        ([1], ["yes", "no"], 10, 100),
+        ([1, 2], ["yes", "no"], 30, 80),
+        ([1, 2, 3], ["yes", "no"], 50, 50),
+        ([1, 2, 3], ["yes"], 30, 80),
     ])
-    def test_valid_options_do_not_raise_exception(self, choices, range_min, range_max):
+    def test_valid_options_do_not_raise_exception(self, choices_dD, choices_cH, range_min, range_max):
         """GIVEN a BoardOptionValidator instantiated with a set of
         external board options
 
@@ -37,7 +41,10 @@ class TestBoardOptionValidator:
 
         offered_options = {
             "differentDesigns": {
-                "choices": choices
+                "choices": choices_dD
+            },
+            "castellatedHoles": {
+                "choices": choices_cH
             },
             "dimensionX": {
                 "range": {
@@ -52,16 +59,20 @@ class TestBoardOptionValidator:
         except ValidationError:
             pytest.fail("Valid internal options raised ValidationError")
 
-    @pytest.mark.parametrize("choices, range_min, range_max", [
-        pytest.param([], 10, 100, id="empty choice list"),
-        pytest.param([1, 2, 4], 10, 100, id="choice list contains unavailable value"),
-        pytest.param([1, 2, 3], 9, 100, id="range minimum too low"),
-        pytest.param([1, 2, 3], 10, 101, id="range maximum too high"),
-        pytest.param([1, 2, 3], 50, 40, id="minimum is larger than maximum"),
-        pytest.param(1, 10, 100, id="choices not given as list"),
-        pytest.param([1, 2, 3], [10, 11], [99, 100], id="range bounds not given as ints")
+    @pytest.mark.parametrize("choices_dD, choices_cH, range_min, range_max", [
+        pytest.param([], ["yes", "no"], 10, 100, id="empty choice list"),
+        pytest.param([1, 2, 4], ["yes", "no"], 10, 100, id="choice list contains unavailable value"),
+        pytest.param([1, 2, 3], ["yes", "no"], 9, 100, id="range minimum too low"),
+        pytest.param([1, 2, 3], ["yes", "no"], 10, 101, id="range maximum too high"),
+        pytest.param([1, 2, 3], ["yes", "no"], 50, 40, id="minimum is larger than maximum"),
+        pytest.param(1, ["yes", "no"], 10, 100, id="choices not given as list"),
+        pytest.param([1, 2, 3], ["yes", "no"], [10, 11], [99, 100], id="range bounds not given as ints"),
+        pytest.param([1, "2", 3], ["yes", "no"], 10, 100, id="choice list contains more than one type"),
+        pytest.param([1], [""], 10, 100, id="only empty string in choice list"),
+        pytest.param([1], ["yes", "no", ""], 10, 100, id="empty choice list contains empty string"),
+        pytest.param([1], ["yes", "no", "no"], 10, 100, id="choice list contains duplicate values"),
     ])
-    def test_invalid_option_values_raise_validation_error(self, choices, range_min, range_max):
+    def test_invalid_option_values_raise_validation_error(self, choices_dD, choices_cH, range_min, range_max):
         """GIVEN a BoardOptionValidator instantiated with a set of
         external board options
 
@@ -74,7 +85,10 @@ class TestBoardOptionValidator:
 
         offered_options = {
             "differentDesigns": {
-                "choices": choices
+                "choices": choices_dD
+            },
+            "castellatedHoles": {
+                "choices":choices_cH
             },
             "dimensionX": {
                 "range": {
