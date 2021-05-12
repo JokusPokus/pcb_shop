@@ -19,6 +19,10 @@ class AttributeValidator:
 
     @staticmethod
     def _validate_choice(value: Union[str, int, float], offered_values: list, label: str) -> None:
+        expected_type = type(offered_values[0])
+        if not isinstance(value, expected_type):
+            raise ValidationError(f"The '{label}' attribute must have type {expected_type}.")
+
         if value not in offered_values:
             raise ValidationError(
                 f"Choice '{value}' is not available for attribute '{label}'.",
@@ -26,7 +30,12 @@ class AttributeValidator:
             )
 
     @staticmethod
-    def _validate_range(value: Union[str, int, float], offered_values: dict, label: str) -> None:
+    def _validate_range(value: Number, offered_values: dict, label: str) -> None:
+        if not isinstance(value, Number):
+            raise ValidationError(
+                f"Value for range attribute {label} must be a number (int or float), not {type(value)}."
+            )
+
         if not offered_values["min"] <= value <= offered_values["max"]:
             raise ValidationError(
                 f"'{value}' is not in available range for attribute '{label}'.",
