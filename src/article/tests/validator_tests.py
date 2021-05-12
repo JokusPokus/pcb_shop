@@ -20,6 +20,7 @@ class TestBoardOptionValidator:
 
     @pytest.mark.parametrize("choices, range_min, range_max", [
         ([1, 2, 3], 10, 100),
+        ([1], 10, 100),
         ([1, 2], 30, 80),
         ([1, 2, 3], 50, 50)
     ])
@@ -56,7 +57,9 @@ class TestBoardOptionValidator:
         pytest.param([1, 2, 4], 10, 100, id="choice list contains unavailable value"),
         pytest.param([1, 2, 3], 9, 100, id="range minimum too low"),
         pytest.param([1, 2, 3], 10, 101, id="range maximum too high"),
-        pytest.param([1, 2, 3], 50, 40, id="minimum is larger than maximum")
+        pytest.param([1, 2, 3], 50, 40, id="minimum is larger than maximum"),
+        pytest.param(1, 10, 100, id="choices not given as list"),
+        pytest.param([1, 2, 3], [10, 11], [99, 100], id="range bounds not given as ints")
     ])
     def test_invalid_option_values_raise_validation_error(self, choices, range_min, range_max):
         """GIVEN a BoardOptionValidator instantiated with a set of

@@ -1,4 +1,5 @@
 from typing import Optional, Union
+from numbers import Number
 from django.core.exceptions import ValidationError
 from django.apps import apps
 
@@ -77,6 +78,11 @@ class BoardOptionValidator:
 
     @staticmethod
     def _validate_choices(internal_values: dict, external_values: dict, label: str) -> None:
+        if not isinstance(internal_values["choices"], list):
+            raise ValidationError(
+                f"Choices for attribute {label} must be given as a list, not {type(internal_values)}."
+            )
+
         if not set(internal_values["choices"]) <= set(external_values["choices"]):
             raise ValidationError(
                 f"At least one internal option for '{label}' is not externally available.",
@@ -86,6 +92,14 @@ class BoardOptionValidator:
 
     @staticmethod
     def _validate_range(internal_values: dict, external_values: dict, label: str) -> None:
+        if not (
+                isinstance(internal_values["range"]["min"], Number)
+                and isinstance(internal_values["range"]["max"], Number)
+        ):
+            raise ValidationError(
+                f"Bounds for attribute {label} must be given as numbers (int or float), not {type(internal_values)}."
+            )
+
         if (
                 internal_values["range"]["min"] < external_values["range"]["min"]
                 or internal_values["range"]["max"] > external_values["range"]["max"]
