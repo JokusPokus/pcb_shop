@@ -125,3 +125,32 @@ class TestAttributeValidator:
             validator.validate(board_attributes)
         except ValidationError:
             pytest.fail("Valid board attributes raised ValidationError")
+
+    @pytest.mark.parametrize("differentDesigns, dimensionX", [
+        pytest.param(0, 42, id="choice not offered"),
+        pytest.param(1, 9, id="value out of range (low)"),
+        pytest.param(1, 101, id="value out of range (high)"),
+        pytest.param(1.0, 42, id="choice has wrong type (float)"),
+        pytest.param([1], 42, id="choice has wrong type (list)"),
+        pytest.param("1", 42, id="choice has wrong type (str)"),
+        pytest.param(3, "42", id="value has wrong type (str)"),
+        pytest.param(3, [42], id="value has wrong type (list)")
+    ])
+    def test_invalid_attributes_raise_exception(self, differentDesigns, dimensionX):
+        """GIVEN an AttributeValidator instantiated with a set of
+        currently offered board options
+
+        WHEN the validate method is called with a set of invalid board
+        attributes
+
+        THEN a ValidationError is thrown.
+        """
+        validator = AttributeValidator(self.OFFERED_OPTIONS)
+
+        board_attributes = {
+            "differentDesigns": differentDesigns,
+            "dimensionX": dimensionX
+        }
+
+        with pytest.raises(ValidationError):
+            validator.validate(board_attributes)
