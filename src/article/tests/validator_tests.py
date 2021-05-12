@@ -107,6 +107,9 @@ class TestAttributeValidator:
         "differentDesigns": {
             "choices": [1, 2, 3]
         },
+        "castellatedHoles": {
+            "choices": ["yes", "no"]
+        },
         "dimensionX": {
             "range": {
                 "min": 10,
@@ -115,12 +118,12 @@ class TestAttributeValidator:
         }
     }
 
-    @pytest.mark.parametrize("differentDesigns, dimensionX", [
-        (1, 10),
-        (3, 100),
-        (2, 42),
+    @pytest.mark.parametrize("differentDesigns, castellatedHoles, dimensionX", [
+        (1, "yes", 10),
+        (3, "no", 100),
+        (2, "yes", 42),
     ])
-    def test_valid_attributes_do_not_raise_exception(self, differentDesigns, dimensionX):
+    def test_valid_attributes_do_not_raise_exception(self, differentDesigns, castellatedHoles, dimensionX):
         """GIVEN an AttributeValidator instantiated with a set of
         currently offered board options
 
@@ -132,6 +135,7 @@ class TestAttributeValidator:
 
         board_attributes = {
             "differentDesigns": differentDesigns,
+            "castellatedHoles": castellatedHoles,
             "dimensionX": dimensionX
         }
 
@@ -140,17 +144,19 @@ class TestAttributeValidator:
         except ValidationError:
             pytest.fail("Valid board attributes raised ValidationError")
 
-    @pytest.mark.parametrize("differentDesigns, dimensionX", [
-        pytest.param(0, 42, id="choice not offered"),
-        pytest.param(1, 9, id="value out of range (low)"),
-        pytest.param(1, 101, id="value out of range (high)"),
-        pytest.param(1.0, 42, id="choice has wrong type (float)"),
-        pytest.param([1], 42, id="choice has wrong type (list)"),
-        pytest.param("1", 42, id="choice has wrong type (str)"),
-        pytest.param(3, "42", id="value has wrong type (str)"),
-        pytest.param(3, [42], id="value has wrong type (list)")
+    @pytest.mark.parametrize("differentDesigns, castellatedHoles, dimensionX", [
+        pytest.param(0, "yes", 42, id="choice not offered"),
+        pytest.param(1, "", 42, id="choice is empty string"),
+        pytest.param(1, "yes", 9, id="value out of range (low)"),
+        pytest.param(1, "yes", 101, id="value out of range (high)"),
+        pytest.param(1.0, "yes", 42, id="choice has wrong type (float)"),
+        pytest.param([1], "yes", 42, id="choice has wrong type (list)"),
+        pytest.param("1", "yes", 42, id="choice has wrong type (str)"),
+        pytest.param(1, 1, 42, id="choice has wrong type (int)"),
+        pytest.param(3, "yes", "42", id="value has wrong type (str)"),
+        pytest.param(3, "yes", [42], id="value has wrong type (list)")
     ])
-    def test_invalid_attributes_raise_exception(self, differentDesigns, dimensionX):
+    def test_invalid_attributes_raise_exception(self, differentDesigns, castellatedHoles, dimensionX):
         """GIVEN an AttributeValidator instantiated with a set of
         currently offered board options
 
@@ -163,6 +169,7 @@ class TestAttributeValidator:
 
         board_attributes = {
             "differentDesigns": differentDesigns,
+            "castellatedHoles": castellatedHoles,
             "dimensionX": dimensionX
         }
 
