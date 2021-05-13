@@ -6,8 +6,8 @@ from django.urls import reverse
 
 from article.models import Board
 
-from . import BoardFactory
-from . import VALID_BOARD_DATA
+from src.article.tests import BoardFactory
+from src.article.tests import VALID_BOARD_DATA
 
 
 @pytest.mark.django_db
