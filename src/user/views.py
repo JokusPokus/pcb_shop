@@ -5,6 +5,10 @@ from django.contrib.auth.decorators import login_required
 
 from rest_framework import generics
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from rest_framework.decorators import api_view, renderer_classes
+from rest_framework.renderers import JSONRenderer
 
 from .models import User, BasketItem
 from .address_management import Address, disable_old_default, set_new_default
@@ -68,7 +72,8 @@ class AddressDetails(generics.RetrieveUpdateDestroyAPIView):
         return Address.objects.filter(user_id=self.request.user.pk)
 
 
-@require_GET
+@api_view(("GET",))
+@renderer_classes((JSONRenderer,))
 @login_required
 def change_address_default(request):
     """GET: Changes a user's default shipping or billing address.
@@ -78,22 +83,28 @@ def change_address_default(request):
     address_type = request.GET.get("type")
 
     # Protect against malformed requests
-    if new_default_address_id is None or address_type not in ["shipping", "billing"]:
-        response_body = {"Error": "Query params not valid. Requires address-id and type (shipping or billing)."}
-        return JsonResponse(status=400, data=response_body)
+    try:
+        new_default_address_id = int(new_default_address_id)
+    except TypeError:
+        response_body = {"Error": "Query params not valid. Address ID not given."}
+        return Response(status=HTTP_400_BAD_REQUEST, data=response_body)
+
+    if address_type not in ["shipping", "billing"]:
+        response_body = {"Error": "Query params not valid. Default type (shipping or billing) not given."}
+        return Response(status=HTTP_400_BAD_REQUEST, data=response_body)
 
     current_user = request.user
-    new_default_address_id = int(new_default_address_id)
 
     # Make sure current user owns the new default address
-    if not current_user.addresses.filter(id=new_default_address_id):
+    if not current_user.addresses.filter(id=new_default_address_id).exists():
         response_body = {"Error": "Address does not exist for this user."}
-        return JsonResponse(status=404, data=response_body)
+        return Response(status=HTTP_404_NOT_FOUND, data=response_body)
 
     disable_old_default(address_type, current_user)
     set_new_default(address_type, current_user, new_default_address_id)
+
     response_body = {"Success": f"Default {address_type} address changed successfully"}
-    return JsonResponse(response_body)
+    return Response(status=HTTP_200_OK, data=response_body)
 
 
 class BasketItemList(generics.ListAPIView):

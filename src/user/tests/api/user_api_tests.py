@@ -4,7 +4,7 @@ from django.urls import reverse
 
 from user.models import User
 
-from . import VALID_CREDENTIALS
+from src.user.tests import VALID_CREDENTIALS
 
 
 @pytest.mark.django_db

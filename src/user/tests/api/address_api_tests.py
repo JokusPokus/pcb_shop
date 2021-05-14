@@ -2,7 +2,7 @@ import pytest
 
 from django.urls import reverse
 
-from . import VALID_ADDRESS_DATA, OTHER_VALID_ADDRESS, INVALID_ADDRESS_FIELDS
+from src.user.tests import VALID_ADDRESS_DATA, OTHER_VALID_ADDRESS, INVALID_ADDRESS_FIELDS
 
 from user.address_management import Address
 from user.factories import AddressFactory
@@ -164,6 +164,8 @@ class TestAddressUpdateFailure:
         THEN the correct Http error code is returned.
         """
         NON_EXISTING_ADDRESS_ID = 9999
+        assert not Address.objects.filter(id=NON_EXISTING_ADDRESS_ID).exists()
+
         response = authenticated_client.patch(
             path=reverse("user:address_details", args=[NON_EXISTING_ADDRESS_ID]),
             data=VALID_ADDRESS_DATA,
@@ -251,6 +253,8 @@ class TestAddressDeletionFailure:
         THEN the correct Http error code is returned.
         """
         NON_EXISTING_ADDRESS_ID = 9999
+        assert not Address.objects.filter(id=NON_EXISTING_ADDRESS_ID).exists()
+
         response = authenticated_client.delete(
             path=reverse("user:address_details", args=[NON_EXISTING_ADDRESS_ID]),
             content_type='application/json'
