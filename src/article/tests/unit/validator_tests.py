@@ -5,6 +5,9 @@ from django.core.exceptions import ValidationError
 from article.validators import BoardOptionValidator, AttributeValidator
 
 
+pytestmark = pytest.mark.unit
+
+
 class TestBoardOptionValidator:
     EXTERNAL_OPTIONS = {
         "differentDesigns": {

@@ -8,6 +8,9 @@ from user.address_management import Address
 from user.tests import VALID_ADDRESS_DATA
 
 
+pytestmark = pytest.mark.unit
+
+
 @pytest.mark.django_db
 @pytest.mark.parametrize("default_type", ["shipping", "billing"])
 class TestSetNewDefault:
@@ -54,8 +57,8 @@ class TestSetNewDefault:
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize("default_type", ["shipping", "billing"])
 class TestDisableOldDefault:
-    @pytest.mark.parametrize("default_type", ["shipping", "billing"])
     def test_old_default_is_disabled(self, user, default_type):
         # GIVEN
         address = Address.objects.create(
@@ -71,3 +74,13 @@ class TestDisableOldDefault:
         # THEN
         address.refresh_from_db()
         assert not getattr(address, f"is_{default_type}_default")
+
+    def test_disable_default_without_existing_address_does_not_throw_error(self, user, default_type):
+        # GIVEN
+        assert user.addresses.count() == 0
+
+        # WHEN/THEN
+        try:
+            disable_old_default(_type=default_type, _user=user)
+        except Exception as err:
+            pytest.fail("Disabling default should not throw error, but threw:", err)

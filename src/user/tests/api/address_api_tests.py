@@ -8,6 +8,9 @@ from user.address_management import Address
 from user.factories import AddressFactory
 
 
+pytestmark = pytest.mark.api
+
+
 @pytest.mark.django_db
 class TestAddressCreationSuccess:
     def test_correct_http_response_and_inserted_into_db(self, authenticated_client, user):

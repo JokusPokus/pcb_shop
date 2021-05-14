@@ -6,8 +6,11 @@ from django.urls import reverse
 
 from article.models import Board
 
-from src.article.tests import BoardFactory
-from src.article.tests import VALID_BOARD_DATA
+from article.tests import BoardFactory
+from article.tests import VALID_BOARD_DATA
+
+
+pytestmark = pytest.mark.api
 
 
 @pytest.mark.django_db

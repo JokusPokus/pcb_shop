@@ -3,8 +3,10 @@ import pytest
 from django.urls import reverse
 
 from user.models import User
+from user.tests import VALID_CREDENTIALS
 
-from src.user.tests import VALID_CREDENTIALS
+
+pytestmark = pytest.mark.api
 
 
 @pytest.mark.django_db
